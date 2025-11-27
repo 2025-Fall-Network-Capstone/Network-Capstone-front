@@ -1,10 +1,10 @@
 /* ============================= */
-/*     COLOR THEME (피그마 기반) */
+/*     COLOR THEME  */
 /* ============================= */
 
 :root {
-  --wine-main: #751824;       /* 버튼/active/tab border */
-  --wine-hover: #55131B;      /* hover 색상 */
+  --wine-main: #751824;       
+  --wine-hover: #55131B;     
   --nav-border: #751824;
 
   --purple-mid: #BA71A2;
@@ -46,7 +46,7 @@ body {
 
 
 /* ============================= */
-/*     NAVIGATION BAR (수정본)   */
+/*     NAVIGATION BAR (최종)     */
 /* ============================= */
 
 .nav-bar {
@@ -54,24 +54,24 @@ body {
   align-items: center;
   background: #ffffff;
   border: 2px solid #751824;
-  border-radius: 40px;
-  padding: 6px 14px;
+  border-radius: 20px;        
+  padding: 8px 14px;
   gap: 14px;
   width: fit-content;
   margin-bottom: 34px;
 }
 
-/* Role Setting → 박스 아님, 글씨만 */
+
 .nav-label {
   color: #751824;
   font-size: 14px;
   font-weight: 600;
-  padding: 0;           /* pill 제거 */
+  padding: 0;
   background: none;
   border: none;
 }
 
-/* +++ */
+/* +++ divider */
 .nav-divider {
   color: #751824;
   font-size: 13px;
@@ -86,7 +86,7 @@ body {
 /* 기본 탭 */
 .role-tab {
   padding: 6px 18px;
-  border-radius: 30px;
+  border-radius: 15px;       
   border: 1.8px solid #751824;
   background: #ffffff;
   color: #751824;
@@ -107,6 +107,7 @@ body {
 .role-tab:hover {
   background: rgba(117, 24, 36, 0.10);
 }
+
 
 
 /* ============================= */
@@ -160,8 +161,8 @@ body {
 
 .landing-btn {
   padding: 12px 24px;
-  border-radius: 999px;
-  background: var(--wine-main);
+  border-radius: 20px;        
+  background: #751824;         
   color: #ffffff;
   border: none;
   font-size: 15px;
@@ -175,12 +176,12 @@ body {
 }
 
 .landing-btn:hover {
-  background-color: var(--wine-hover);
+  background-color: #55131B;  
   transform: translateY(-1px);
 }
 
 .landing-btn:active {
-  background-color: #3b0e15;
+  background-color: #3b0e15;   
   transform: translateY(1px);
 }
 
