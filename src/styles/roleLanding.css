@@ -1,11 +1,10 @@
 /* ============================= */
-/*     COLOR THEME (피그마 기반) */
+/*     COLOR THEME               */
 /* ============================= */
 
 :root {
-  --wine-main: #751824;       /* 버튼/active/tab border */
-  --wine-hover: #55131B;      /* hover 색상 */
-  --nav-border: #751824;
+  --wine-main: #751824;      
+  --wine-hover: #55131B;     
 
   --purple-mid: #BA71A2;
   --purple-light: #E0CDEC;
@@ -54,7 +53,7 @@ body {
   align-items: center;
   background: #ffffff;
   border: 2px solid #751824;
-  border-radius: 20px;        /* 전체 pill radius */
+  border-radius: 20px;       
   padding: 8px 14px;
   gap: 14px;
   width: fit-content;
@@ -86,7 +85,7 @@ body {
 /* 기본 탭 */
 .role-tab {
   padding: 6px 18px;
-  border-radius: 15px;       /* 역할 버튼 radius */
+  border-radius: 15px;       
   border: 1.8px solid #751824;
   background: #ffffff;
   color: #751824;
@@ -161,8 +160,8 @@ body {
 
 .landing-btn {
   padding: 12px 24px;
-  border-radius: 20px;         /* ← 연진이가 말한 정확한 radius */
-  background: #751824;         /* 기본색 */
+  border-radius: 20px;         
+  background: #751824;         
   color: #ffffff;
   border: none;
   font-size: 15px;
@@ -176,12 +175,12 @@ body {
 }
 
 .landing-btn:hover {
-  background-color: #55131B;   /* 호버 */
+  background-color: #55131B;   
   transform: translateY(-1px);
 }
 
 .landing-btn:active {
-  background-color: #3b0e15;   /* active */
+  background-color: #3b0e15;   
   transform: translateY(1px);
 }
 
