@@ -1,10 +1,11 @@
 /* ============================= */
-/*     COLOR THEME               */
+/*     COLOR THEME (DEFAULT)    */
 /* ============================= */
 
+/* 기본 EV 테마 (초기값) */
 :root {
   --wine-main: #751824;      
-  --wine-hover: #55131B;     
+  --wine-hover: #55131B;
 
   --purple-mid: #BA71A2;
   --purple-light: #E0CDEC;
@@ -15,6 +16,29 @@
   --bg-main: #faf9fb;
   --bg-card: #ffffff;
 }
+
+/* ============================= */
+/*        ROLE THEMES           */
+/* ============================= */
+
+/* Emergency Vehicle (기본) */
+:root.ev-theme {
+  --wine-main: #751824;
+  --wine-hover: #55131B;
+}
+
+/* Control Tower 테마 */
+:root.control-theme {
+  --wine-main: #12543E;     /* 버튼 기본색 */
+  --wine-hover: #062C1F;    /* 버튼 hover */
+}
+
+/* Auto Vehicle 테마 */
+:root.av-theme {
+  --wine-main: #3A2F71;     /* 버튼 기본색 */
+  --wine-hover: #170D49;    /* hover */
+}
+
 
 
 /* ============================= */
@@ -52,17 +76,16 @@ body {
   display: flex;
   align-items: center;
   background: #ffffff;
-  border: 2px solid #751824;
-  border-radius: 20px;       
+  border: 2px solid var(--wine-main);
+  border-radius: 20px;
   padding: 8px 14px;
   gap: 14px;
   width: fit-content;
   margin-bottom: 34px;
 }
 
-/* Role Setting → 텍스트만 */
 .nav-label {
-  color: #751824;
+  color: var(--wine-main);
   font-size: 14px;
   font-weight: 600;
   padding: 0;
@@ -70,9 +93,8 @@ body {
   border: none;
 }
 
-/* +++ divider */
 .nav-divider {
-  color: #751824;
+  color: var(--wine-main);
   font-size: 13px;
   margin-right: 6px;
 }
@@ -82,29 +104,26 @@ body {
   gap: 8px;
 }
 
-/* 기본 탭 */
 .role-tab {
   padding: 6px 18px;
-  border-radius: 15px;       
-  border: 1.8px solid #751824;
+  border-radius: 15px;
+  border: 1.8px solid var(--wine-main);
   background: #ffffff;
-  color: #751824;
+  color: var(--wine-main);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: 0.18s ease;
 }
 
-/* 선택된 탭 */
 .role-tab.active {
-  background: #751824;
+  background: var(--wine-main);
   color: #ffffff;
-  border-color: #751824;
+  border-color: var(--wine-main);
 }
 
-/* hover */
 .role-tab:hover {
-  background: rgba(117, 24, 36, 0.10);
+  background: rgba(0, 0, 0, 0.08);
 }
 
 
@@ -160,8 +179,8 @@ body {
 
 .landing-btn {
   padding: 12px 24px;
-  border-radius: 20px;         
-  background: #751824;         
+  border-radius: 20px;
+  background: var(--wine-main);     /* 버튼 색 theme */
   color: #ffffff;
   border: none;
   font-size: 15px;
@@ -175,12 +194,12 @@ body {
 }
 
 .landing-btn:hover {
-  background-color: #55131B;   
+  background-color: var(--wine-hover);  /* hover theme */
   transform: translateY(-1px);
 }
 
 .landing-btn:active {
-  background-color: #3b0e15;   
+  background-color: var(--wine-hover);
   transform: translateY(1px);
 }
 
@@ -199,4 +218,3 @@ body {
   height: 100%;
   object-fit: cover;
 }
-

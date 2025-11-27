@@ -1,8 +1,12 @@
 // src/pages/RoleLandingPage.jsx
 import "../styles/roleLanding.css";
 import roadImg from "../assets/road.jpg";
+import { useContext } from "react";
+import { RoleContext } from "../context/RoleContext.jsx";
 
 function RoleLandingPage() {
+  const { role, setRole } = useContext(RoleContext);
+
   return (
     <div className="landing-root">
       <div className="landing-container">
@@ -13,9 +17,24 @@ function RoleLandingPage() {
           <span className="nav-divider">+++</span>
 
           <div className="role-tab-wrapper">
-            <button className="role-tab active">Emergency Vehicle</button>
-            <button className="role-tab">Control Tower</button>
-            <button className="role-tab">Auto Vehicle</button>
+            <button
+              className={`role-tab ${role === "EV" ? "active" : ""}`}
+              onClick={() => setRole("EV")}
+            >
+              Emergency Vehicle
+            </button>
+            <button
+              className={`role-tab ${role === "CONTROL" ? "active" : ""}`}
+              onClick={() => setRole("CONTROL")}
+            >
+              Control Tower
+            </button>
+            <button
+              className={`role-tab ${role === "AV" ? "active" : ""}`}
+              onClick={() => setRole("AV")}
+            >
+              Auto Vehicle
+            </button>
           </div>
         </header>
 
