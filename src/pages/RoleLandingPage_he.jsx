@@ -8,27 +8,27 @@ function RoleLandingPage() {
   const { role, setRole } = useContext(RoleContext);
 
   return (
-    <div className="landing-root">
-      <div className="landing-all">
-        <div className="landing-container">
+    <div className="landing-root-h">
+      <div className="landing-all-h">
+        <div className="landing-container-h">
           {/* NAVIGATION BAR */}
-          <header className="nav-bar">
-            <span className="nav-label">Role Setting</span>
-            <span className="nav-divider">+++</span>
+          <header className="nav-bar-h">
+            <span className="nav-label-h">Role Setting</span>
+            <span className="nav-divider-h">+++</span>
 
-            <div className="role-tab-wrapper">
+            <div className="role-tab-wrapper-h">
               <button
-                className={`role-tab ${role === "EV" ? "active" : ""}`}
+                className={`role-tab-h ${role === "EV" ? "active-h" : ""}`}
                 onClick={() => setRole("EV")}>
                 Emergency Vehicle
               </button>
               <button
-                className={`role-tab ${role === "CONTROL" ? "active" : ""}`}
+                className={`role-tab-h ${role === "CONTROL" ? "active-h" : ""}`}
                 onClick={() => setRole("CONTROL")}>
                 Control Tower
               </button>
               <button
-                className={`role-tab ${role === "AV" ? "active" : ""}`}
+                className={`role-tab-h ${role === "AV" ? "active-h" : ""}`}
                 onClick={() => setRole("AV")}>
                 Auto Vehicle
               </button>
@@ -36,27 +36,29 @@ function RoleLandingPage() {
           </header>
 
           {/* CONTENT AREA */}
-          <section className="content">
-            <div className="title-des-content">
+          <section className="content-h">
+            <div className="title-des-content-h">
               {/* TITLE */}
-              <h1 className="landing-title">
+              <h1 className="landing-title-h">
                 Emergency-Situation
                 <br />
                 Dashboard
               </h1>
 
               {/* DESCRIPTION */}
-              <p className="landing-desc">
+              <p className="landing-desc-h">
                 EV인 경우 대시보드를 표시합니다. 무엇을 입력해야 할지는 잘 모르겠지만 대략 두 줄
                 정도면 충분할 것 같습니다. 그래서 내용을 채워넣는 부분입니다.
               </p>
             </div>
+
             {/* BUTTON */}
-            <button className="landing-btn">Show My Dashboard →</button>
+            <button className="landing-btn-h">Show My Dashboard →</button>
           </section>
         </div>
-        <div className="right-side">
-          <img src={roadImg} alt="road view" className="landing-img" />
+
+        <div className="right-side-h">
+          <img src={roadImg} alt="road view" className="landing-img-h" />
         </div>
       </div>
     </div>

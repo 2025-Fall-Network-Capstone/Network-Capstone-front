@@ -29,15 +29,15 @@
 
 /* Control Tower 테마 */
 :root.control-theme {
-  --wine-main: #12543e; /* 버튼 기본색 */
-  --wine-hover: #062c1f; /* 버튼 hover */
+  --wine-main: #12543e;
+  --wine-hover: #062c1f;
 }
 
 /* Auto Vehicle 테마 */
 :root.av-theme {
-  --wine-main: #3a2f71; /* 버튼 기본색 */
-  --wine-hover: #170d49; /* hover */
-  --wine-hover-shadow: #3a2f71aa; /* hover 그림자 */
+  --wine-main: #3a2f71;
+  --wine-hover: #170d49;
+  --wine-hover-shadow: #3a2f71aa;
 }
 
 /* ============================= */
@@ -50,30 +50,28 @@ body {
   font-family: "Inter", "Pretendard", system-ui, sans-serif;
 }
 
-.landing-root {
+.landing-root-h {
   display: flex;
   justify-content: center;
   padding: 40px 0;
 }
 
-.landing-all {
+.landing-all-h {
   display: flex;
   flex-direction: row;
   width: 100%;
-  /* max-width: 1600px; */
   min-height: 100%;
   background: var(--bg-card);
   padding: 20px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
-.landing-container {
+.landing-container-h {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   flex-shrink: 0;
   width: 55%;
-
   padding: 0 20px 10px;
   margin-bottom: 150px;
   gap: stretch;
@@ -84,7 +82,7 @@ body {
 /*     NAVIGATION BAR (최종)     */
 /* ============================= */
 
-.nav-bar {
+.nav-bar-h {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -95,7 +93,7 @@ body {
   gap: 14px;
 }
 
-.nav-label {
+.nav-label-h {
   color: var(--wine-main);
   font-size: 14px;
   font-weight: 600;
@@ -104,18 +102,18 @@ body {
   border: none;
 }
 
-.nav-divider {
+.nav-divider-h {
   color: var(--wine-main);
   font-size: 13px;
   margin-right: 6px;
 }
 
-.role-tab-wrapper {
+.role-tab-wrapper-h {
   display: flex;
   gap: 8px;
 }
 
-.role-tab {
+.role-tab-h {
   padding: 10px 20px;
   border-radius: 15px;
   border: 1.8px solid var(--wine-main);
@@ -127,14 +125,13 @@ body {
   transition: 0.18s ease;
 }
 
-.role-tab.active {
+.role-tab-h.active-h {
   background: var(--wine-main);
   color: #ffffff;
   border-color: var(--wine-main);
 }
 
-.role-tab:hover {
-  /* background: rgba(0, 0, 0, 0.08); */
+.role-tab-h:hover {
   filter: brightness(0.9);
 }
 
@@ -142,14 +139,14 @@ body {
 /*           CONTENT             */
 /* ============================= */
 
-.content {
+.content-h {
   display: flex;
   flex-direction: column;
   gap: 20px;
   max-width: 560px;
 }
 
-.title-des-content {
+.title-des-content-h {
   display: flex;
   flex-direction: column;
   gap: 0px;
@@ -159,7 +156,7 @@ body {
 /*            TITLE              */
 /* ============================= */
 
-.landing-title {
+.landing-title-h {
   font-size: 52px;
   line-height: 1.15;
   margin: 0 0 10px;
@@ -173,21 +170,20 @@ body {
 /*         DESCRIPTION           */
 /* ============================= */
 
-.landing-desc {
+.landing-desc-h {
   font-size: 15px;
   color: var(--text-sub);
   line-height: 1.6;
-  /* margin-bottom: 36px; */
 }
 
 /* ============================= */
 /*      DASHBOARD BUTTON         */
 /* ============================= */
 
-.landing-btn {
+.landing-btn-h {
   padding: 15px 30px;
   border-radius: 20px;
-  background: var(--wine-main); /* 버튼 색 theme */
+  background: var(--wine-main);
   color: #ffffff;
   border: none;
   font-size: 15px;
@@ -200,12 +196,12 @@ body {
   transition: background-color 0.15s ease, transform 0.15s ease;
 }
 
-.landing-btn:hover {
-  background-color: var(--wine-hover); /* hover theme */
+.landing-btn-h:hover {
+  background-color: var(--wine-hover);
   transform: translateY(-1px);
 }
 
-.landing-btn:active {
+.landing-btn-h:active {
   background-color: var(--wine-hover);
   transform: translateY(1px);
 }
@@ -214,12 +210,12 @@ body {
 /*        IMAGE SECTION          */
 /* ============================= */
 
-.right-side {
+.right-side-h {
   border-radius: 20px;
   overflow: hidden;
 }
 
-.landing-img {
+.landing-img-h {
   width: 100%;
   height: 100%;
   object-fit: cover;
