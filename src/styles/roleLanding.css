@@ -1,0 +1,201 @@
+/* ============================= */
+/*     COLOR THEME (피그마 기반) */
+/* ============================= */
+
+:root {
+  --wine-main: #751824;       /* 버튼/active/tab border */
+  --wine-hover: #55131B;      /* hover 색상 */
+  --nav-border: #751824;
+
+  --purple-mid: #BA71A2;
+  --purple-light: #E0CDEC;
+
+  --text-main: #1e1e1e;
+  --text-sub: #4a4a4a;
+
+  --bg-main: #faf9fb;
+  --bg-card: #ffffff;
+}
+
+
+/* ============================= */
+/*       GLOBAL LAYOUT          */
+/* ============================= */
+
+body {
+  margin: 0;
+  background-color: var(--bg-main);
+  font-family: "Inter", "Pretendard", system-ui, sans-serif;
+}
+
+.landing-root {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
+}
+
+.landing-container {
+  width: 100%;
+  max-width: 1600px;
+  min-height: 90vh;
+  background: var(--bg-card);
+  border-radius: 28px;
+  padding: 40px 60px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+
+/* ============================= */
+/*     NAVIGATION BAR (수정본)   */
+/* ============================= */
+
+.nav-bar {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 2px solid #751824;
+  border-radius: 40px;
+  padding: 6px 14px;
+  gap: 14px;
+  width: fit-content;
+  margin-bottom: 34px;
+}
+
+/* Role Setting → 박스 아님, 글씨만 */
+.nav-label {
+  color: #751824;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0;           /* pill 제거 */
+  background: none;
+  border: none;
+}
+
+/* +++ */
+.nav-divider {
+  color: #751824;
+  font-size: 13px;
+  margin-right: 6px;
+}
+
+.role-tab-wrapper {
+  display: flex;
+  gap: 8px;
+}
+
+/* 기본 탭 */
+.role-tab {
+  padding: 6px 18px;
+  border-radius: 30px;
+  border: 1.8px solid #751824;
+  background: #ffffff;
+  color: #751824;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+/* 선택된 탭 */
+.role-tab.active {
+  background: #751824;
+  color: #ffffff;
+  border-color: #751824;
+}
+
+/* hover */
+.role-tab:hover {
+  background: rgba(117, 24, 36, 0.10);
+}
+
+
+/* ============================= */
+/*           CONTENT             */
+/* ============================= */
+
+.content {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 36px;
+}
+
+.left-side {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 560px;
+}
+
+
+/* ============================= */
+/*            TITLE              */
+/* ============================= */
+
+.landing-title {
+  font-size: 52px;
+  line-height: 1.15;
+  margin: 0 0 16px;
+  color: var(--text-main);
+  font-weight: 600;
+  padding-bottom: 14px;
+  border-bottom: 1.2px solid #c8c8c8;
+}
+
+
+/* ============================= */
+/*         DESCRIPTION           */
+/* ============================= */
+
+.landing-desc {
+  font-size: 15px;
+  color: var(--text-sub);
+  line-height: 1.6;
+  margin-bottom: 36px;
+}
+
+
+/* ============================= */
+/*      DASHBOARD BUTTON         */
+/* ============================= */
+
+.landing-btn {
+  padding: 12px 24px;
+  border-radius: 999px;
+  background: var(--wine-main);
+  color: #ffffff;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.landing-btn:hover {
+  background-color: var(--wine-hover);
+  transform: translateY(-1px);
+}
+
+.landing-btn:active {
+  background-color: #3b0e15;
+  transform: translateY(1px);
+}
+
+
+/* ============================= */
+/*        IMAGE SECTION          */
+/* ============================= */
+
+.right-side {
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+.landing-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
