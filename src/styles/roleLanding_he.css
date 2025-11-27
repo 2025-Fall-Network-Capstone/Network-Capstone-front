@@ -1,0 +1,226 @@
+/* ============================= */
+/*     COLOR THEME (DEFAULT)    */
+/* ============================= */
+
+/* 기본 EV 테마 (초기값) */
+:root {
+  --wine-main: #751824;
+  --wine-hover: #55131b;
+
+  --purple-mid: #ba71a2;
+  --purple-light: #e0cdec;
+
+  --text-main: #1e1e1e;
+  --text-sub: #4a4a4a;
+
+  --bg-main: #faf9fb;
+  --bg-card: #ffffff;
+}
+
+/* ============================= */
+/*        ROLE THEMES           */
+/* ============================= */
+
+/* Emergency Vehicle (기본) */
+:root.ev-theme {
+  --wine-main: #751824;
+  --wine-hover: #55131b;
+}
+
+/* Control Tower 테마 */
+:root.control-theme {
+  --wine-main: #12543e; /* 버튼 기본색 */
+  --wine-hover: #062c1f; /* 버튼 hover */
+}
+
+/* Auto Vehicle 테마 */
+:root.av-theme {
+  --wine-main: #3a2f71; /* 버튼 기본색 */
+  --wine-hover: #170d49; /* hover */
+  --wine-hover-shadow: #3a2f71aa; /* hover 그림자 */
+}
+
+/* ============================= */
+/*       GLOBAL LAYOUT          */
+/* ============================= */
+
+body {
+  margin: 0;
+  background-color: var(--bg-main);
+  font-family: "Inter", "Pretendard", system-ui, sans-serif;
+}
+
+.landing-root {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
+}
+
+.landing-all {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  /* max-width: 1600px; */
+  min-height: 100%;
+  background: var(--bg-card);
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.landing-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-shrink: 0;
+  width: 55%;
+
+  padding: 0 20px 10px;
+  margin-bottom: 150px;
+  gap: stretch;
+  background: var(--bg-card);
+}
+
+/* ============================= */
+/*     NAVIGATION BAR (최종)     */
+/* ============================= */
+
+.nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border: 2px solid var(--wine-main);
+  border-radius: 20px;
+  padding: 10px 15px;
+  gap: 14px;
+}
+
+.nav-label {
+  color: var(--wine-main);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0;
+  background: none;
+  border: none;
+}
+
+.nav-divider {
+  color: var(--wine-main);
+  font-size: 13px;
+  margin-right: 6px;
+}
+
+.role-tab-wrapper {
+  display: flex;
+  gap: 8px;
+}
+
+.role-tab {
+  padding: 10px 20px;
+  border-radius: 15px;
+  border: 1.8px solid var(--wine-main);
+  background: #ffffff;
+  color: var(--wine-main);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+.role-tab.active {
+  background: var(--wine-main);
+  color: #ffffff;
+  border-color: var(--wine-main);
+}
+
+.role-tab:hover {
+  /* background: rgba(0, 0, 0, 0.08); */
+  filter: brightness(0.9);
+}
+
+/* ============================= */
+/*           CONTENT             */
+/* ============================= */
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 560px;
+}
+
+.title-des-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+}
+
+/* ============================= */
+/*            TITLE              */
+/* ============================= */
+
+.landing-title {
+  font-size: 52px;
+  line-height: 1.15;
+  margin: 0 0 10px;
+  color: var(--text-main);
+  font-weight: 600;
+  padding-bottom: 20px;
+  border-bottom: 1.2px solid #c8c8c8;
+}
+
+/* ============================= */
+/*         DESCRIPTION           */
+/* ============================= */
+
+.landing-desc {
+  font-size: 15px;
+  color: var(--text-sub);
+  line-height: 1.6;
+  /* margin-bottom: 36px; */
+}
+
+/* ============================= */
+/*      DASHBOARD BUTTON         */
+/* ============================= */
+
+.landing-btn {
+  padding: 15px 30px;
+  border-radius: 20px;
+  background: var(--wine-main); /* 버튼 색 theme */
+  color: #ffffff;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.landing-btn:hover {
+  background-color: var(--wine-hover); /* hover theme */
+  transform: translateY(-1px);
+}
+
+.landing-btn:active {
+  background-color: var(--wine-hover);
+  transform: translateY(1px);
+}
+
+/* ============================= */
+/*        IMAGE SECTION          */
+/* ============================= */
+
+.right-side {
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.landing-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
