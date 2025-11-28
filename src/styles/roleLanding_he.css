@@ -6,6 +6,7 @@
 :root {
   --wine-main: #751824;
   --wine-hover: #55131b;
+  --wine-hover-2: rgba(202, 117, 127, 0.1);
 
   --purple-mid: #ba71a2;
   --purple-light: #e0cdec;
@@ -25,27 +26,40 @@
 :root.ev-theme {
   --wine-main: #751824;
   --wine-hover: #55131b;
+  --wine-hover-2: rgba(202, 117, 127, 0.1);
+  --wine-hover-3: rgba(117, 24, 36, 0.1);
+  --wine-insert-shadow: rgba(117, 24, 36, 0.1);
 }
 
 /* Control Tower 테마 */
 :root.control-theme {
   --wine-main: #12543e;
   --wine-hover: #062c1f;
+  --wine-hover-2: rgba(207, 228, 222, 0.3);
+  --wine-hover-3: rgba(176, 211, 201, 0.6);
+  --wine-insert-shadow: rgba(18, 84, 62, 0.1);
 }
 
 /* Auto Vehicle 테마 */
 :root.av-theme {
   --wine-main: #3a2f71;
   --wine-hover: #170d49;
-  --wine-hover-shadow: #3a2f71aa;
+  --wine-hover-2: rgba(80, 63, 168, 0.1);
+  --wine-hover-3: rgba(80, 63, 168, 0.2);
+  --wine-insert-shadow: rgba(58, 47, 113, 0.1);
 }
 
 /* ============================= */
 /*       GLOBAL LAYOUT          */
 /* ============================= */
 
+html {
+  height: 100%;
+}
+
 body {
   margin: 0;
+  height: 100%;
   background-color: var(--bg-main);
   font-family: "Inter", "Pretendard", system-ui, sans-serif;
 }
@@ -53,16 +67,20 @@ body {
 .landing-root-h {
   display: flex;
   justify-content: center;
-  padding: 40px 0;
+  width: 100vw;
+  height: 100vh;
+  padding: 0;
 }
 
 .landing-all-h {
   display: flex;
   flex-direction: row;
+  justify-content: space-between;
   width: 100%;
-  min-height: 100%;
+  /* height: 100%; */
   background: var(--bg-card);
   padding: 20px;
+  gap: 20px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
@@ -72,7 +90,7 @@ body {
   justify-content: space-between;
   flex-shrink: 0;
   width: 55%;
-  padding: 0 20px 10px;
+  /* padding: 0 20px; */
   /* margin-bottom: 150px;
   gap: stretch; */
   background: var(--bg-card);
@@ -123,16 +141,23 @@ body {
   font-weight: 500;
   cursor: pointer;
   transition: 0.18s ease;
+  box-shadow: 4px 4px 6px 0 var(--wine-insert-shadow) inset,
+    6px 6px 10px 0 var(--wine-insert-shadow);
 }
 
 .role-tab-h.active-h {
   background: var(--wine-main);
   color: #ffffff;
   border-color: var(--wine-main);
+  box-shadow: 4px 4px 6px 0 rgba(0, 0, 0, 0.15) inset, 6px 6px 10px 0 var(--wine-insert-shadow);
+}
+
+.role-tab-h.active-h:hover {
+  background-color: var(--wine-hover);
 }
 
 .role-tab-h:hover {
-  filter: brightness(0.9);
+  background-color: var(--wine-hover-2);
 }
 
 /* ============================= */
@@ -145,6 +170,7 @@ body {
   flex-direction: column;
   justify-content: center;
   gap: 20px;
+  margin: 10px;
   max-width: 560px;
 }
 
@@ -195,17 +221,16 @@ body {
   align-items: center;
   gap: 6px;
   width: fit-content;
+  box-shadow: 4px 4px 6px 0 rgba(0, 0, 0, 0.15) inset, 6px 6px 10px 0 var(--wine-insert-shadow);
   transition: background-color 0.15s ease, transform 0.15s ease;
 }
 
 .landing-btn-h:hover {
   background-color: var(--wine-hover);
-  transform: translateY(-1px);
 }
 
 .landing-btn-h:active {
   background-color: var(--wine-hover);
-  transform: translateY(1px);
 }
 
 /* ============================= */
@@ -214,6 +239,7 @@ body {
 
 .right-side-h {
   border-radius: 20px;
+  width: 100%;
   overflow: hidden;
 }
 

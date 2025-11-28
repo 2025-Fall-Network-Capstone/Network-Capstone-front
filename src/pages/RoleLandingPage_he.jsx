@@ -1,11 +1,17 @@
 // src/pages/RoleLandingPage.jsx
 import "../styles/roleLanding_he.css";
 import roadImg from "../assets/road.jpg";
+import { useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { RoleContext } from "../context/RoleContext.jsx";
 
 function RoleLandingPage() {
   const { role, setRole } = useContext(RoleContext);
+  const navigate = useNavigate();
+
+  const goToMainPage = () => {
+    navigate("/main");
+  };
 
   return (
     <div className="landing-root-h">
@@ -53,7 +59,9 @@ function RoleLandingPage() {
             </div>
 
             {/* BUTTON */}
-            <button className="landing-btn-h">Show My Dashboard →</button>
+            <button onClick={goToMainPage} className="landing-btn-h">
+              Show My Dashboard →
+            </button>
           </section>
         </div>
 
