@@ -7,9 +7,6 @@ import { useContext, useState, useEffect } from "react";
 import { RoleContext } from "../context/RoleContext.jsx";
 
 import { renderEV, renderAV, renderControl } from "../utils/messageFormatter";
-
-// 소켓 전환: fake 테스트 중
-//import { createFakeSocket as createRealSocket } from "../utils/fakeSocket";
 import { createRealSocket } from "../utils/realSocket";
 
 function MainPage() {
@@ -24,50 +21,40 @@ function MainPage() {
   // 역할별 필터링 규칙
   // -----------------------------
   const shouldDisplay = (packet) => {
-    // EV UI
     if (role === "EV") {
-      return (
-        packet.type === "EV" ||                // 내 상태
-        packet.type === "CONTROL"              // 관제가 EV에게 주는 정보
-      );
+      return packet.type === "EV" || packet.type === "CONTROL";
     }
-
-    // AV1 UI
     if (role === "AV1") {
       return (
-        packet.type === "AV1" ||               // 내 상태
-        packet.type === "EV" ||                // EV 사건/신호
-        packet.type === "CONTROL"              // 관제 정보
+        packet.type === "AV1" ||
+        packet.type === "EV" ||
+        packet.type === "CONTROL"
       );
     }
-
-    // AV2 UI
     if (role === "AV2") {
       return (
-        packet.type === "AV2" ||               // 내 상태
-        packet.type === "EV" ||                // EV 사건/신호
-        packet.type === "CONTROL"              // 관제 정보
+        packet.type === "AV2" ||
+        packet.type === "EV" ||
+        packet.type === "CONTROL"
       );
     }
-
-    // CONTROL UI (모두 표시)
     if (role === "CONTROL") return true;
-
     return false;
   };
 
   // -------------------------------------
-  //  REAL WebSocket 연결
+  // REAL WebSocket 연결 + 관제 시작 이벤트 전송
   // -------------------------------------
   useEffect(() => {
-    const stop = createRealSocket((packet) => {
-      // !!! 역할에 따라 시각화할지 말지를 결정 !!!
+    if (!role) return;
+
+    // createRealSocket가 socket을 리턴한다고 가정
+    const socket = createRealSocket((packet) => {
       if (!shouldDisplay(packet)) return;
 
       let messageArray = [];
       console.log("[MAINPAGE PACKET RECEIVED]", packet);
 
-      // 타입별 메시지 포맷팅
       if (packet.type === "EV") messageArray = renderEV(packet.data);
       if (packet.type === "AV1" || packet.type === "AV2")
         messageArray = renderAV(packet.data);
@@ -78,7 +65,19 @@ function MainPage() {
       setMessages((prev) => [...prev, ...messageArray]);
     }, role);
 
-    return () => stop();
+    // 🔥🔥🔥 ADD: 관제 역할일 경우 시작 이벤트 emit
+    if (role === "CONTROL") {
+      socket.emit("control_start", {
+        role: "CONTROL",
+        timestamp: Date.now()
+      });
+      console.log("[SOCKET EMIT] control_start 전송 완료");
+    }
+    // 🔥🔥🔥 끝
+
+    return () => {
+      socket.disconnect();
+    };
   }, [role]);
 
   return (
@@ -86,7 +85,6 @@ function MainPage() {
       <img src={mapImage} className="main-background-img" />
 
       <div className="main-content">
-
         {/* HEADER */}
         <div className="main-header-section">
           <header className="nav-bar-m">
