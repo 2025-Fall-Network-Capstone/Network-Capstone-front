@@ -6,13 +6,19 @@ import { useNavigate } from "react-router-dom";
 import { useContext, useState, useEffect } from "react";
 import { RoleContext } from "../context/RoleContext.jsx";
 
-// import { renderEV, renderAV, renderControl } from "../utils/messageFormatter";
 import { createRealSocket } from "../utils/realSocket";
 
 function MainPage() {
   const { role } = useContext(RoleContext);
   const [popup, setPopup] = useState(true);
   const [messages, setMessages] = useState([]);
+
+  // ⭐ 실시간 차량 상태 저장 ⭐
+  const [liveState, setLiveState] = useState({
+    speed: 0,
+    direction: "",
+    position: [0, 0],
+  });
 
   const navigate = useNavigate();
   const goToHomePage = () => navigate("/");
@@ -21,53 +27,54 @@ function MainPage() {
   // 역할별 필터링
   //------------------------------------------------------
   const shouldDisplay = (packet) => {
-    if (role === "EV") {
+    if (role === "EV")
       return packet.type === "EV" || packet.type === "CONTROL";
-    }
-    if (role === "AV1") {
+    if (role === "AV1")
       return (
         packet.type === "AV1" ||
         packet.type === "EV" ||
         packet.type === "CONTROL"
       );
-    }
-    if (role === "AV2") {
+    if (role === "AV2")
       return (
         packet.type === "AV2" ||
         packet.type === "EV" ||
         packet.type === "CONTROL"
       );
-    }
     if (role === "CONTROL") return true;
     return false;
   };
 
   //------------------------------------------------------
-  // REAL WebSocket 연결 + CONTROL 역할 start emit
+  // WebSocket 연결
   //------------------------------------------------------
   useEffect(() => {
     if (!role) return;
 
-    // socket 객체 받아오기 (중요!!)
     const socket = createRealSocket((packet) => {
       if (!shouldDisplay(packet)) return;
 
       console.log("[MAINPAGE PACKET RECEIVED]", packet);
 
-      let messageArray = [];
-      if (packet.type === "EV") messageArray = renderEV(packet.data);
-      if (packet.type === "AV1" || packet.type === "AV2")
-        messageArray = renderAV(packet.data);
-      if (packet.type === "CONTROL") messageArray = renderControl(packet.data);
+      // ⭐ 자신의 역할 데이터일 때만 실시간 상태 업데이트 ⭐
+      if (packet.type === role && packet.data) {
+        setLiveState({
+          speed: packet.data.speed ?? 0,
+          direction: packet.data.direction ?? "",
+          position: packet.data.position ?? [0, 0],
+        });
+      }
 
-      if (!Array.isArray(messageArray)) messageArray = [];
+      // ⭐ 로그는 기존 방식 유지 ⭐
+      let newMsg = [];
+      if (packet.type === "STAGE") {
+        newMsg = [{ text: `[Stage] ${packet.data.stage}`, isSinho: false }];
+      }
 
-      setMessages((prev) => [...prev, ...messageArray]);
+      setMessages((prev) => [...prev, ...newMsg]);
     }, role);
 
-    //-----------------------------
-    // CONTROL이면 연결 후 control_start emit
-    //-----------------------------
+    // CONTROL → 시작 신호 emit
     if (role === "CONTROL") {
       socket.on("connect", () => {
         console.log("[CONTROL SOCKET CONNECTED]");
@@ -82,9 +89,7 @@ function MainPage() {
     }
 
     return () => {
-      if (socket && socket.disconnect) {
-        socket.disconnect();
-      }
+      socket.disconnect();
     };
   }, [role]);
 
@@ -138,34 +143,36 @@ function MainPage() {
               </div>
 
               <div className="main-chat-popup-body">
+                {/* 실시간 동작 값 표시 */}
                 <div className="main-chat-realtime-content">
                   <div className="realtime-title">실시간 동작 확인</div>
+
                   <div className="realtime-box-frame">
                     <div className="realtime-box">
                       <div className="realtime-box-sub-tittle">주행 속도</div>
-                      <div className="realtime-box-text">55km/h</div>
+                      <div className="realtime-box-text">
+                        {liveState.speed} km/h
+                      </div>
                     </div>
+
                     <div className="realtime-box">
                       <div className="realtime-box-sub-tittle">주행 방향</div>
-                      <div className="realtime-box-text">직진</div>
+                      <div className="realtime-box-text">
+                        {liveState.direction}
+                      </div>
                     </div>
+
                     <div className="realtime-box">
                       <div className="realtime-box-sub-tittle">현재 위치</div>
-                      <div className="realtime-box-text">( 1 , 3 )</div>
+                      <div className="realtime-box-text">
+                        ({liveState.position[0]} , {liveState.position[1]})
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="main-chat-box box-dongjak">.</div>
-                <div className="main-chat-box box-dongjak">.</div>
-                <div className="main-chat-box box-dongjak">.</div>
-                <div className="main-chat-box box-dongjak">.</div>
-                <div className="main-chat-box box-dongjak">.</div>
-              </div>
-
-              {messages
-                .filter((m) => m.text && m.text.trim() !== "")
-                .map((m, i) => (
+                {/* 로그 박스 */}
+                {messages.map((m, i) => (
                   <div
                     key={i}
                     className={`main-chat-box ${
@@ -175,6 +182,7 @@ function MainPage() {
                     {m.text}
                   </div>
                 ))}
+              </div>
             </div>
           </div>
         )}
