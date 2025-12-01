@@ -59,14 +59,20 @@ function MainPage() {
               </div>
               <div className="main-chat-popup-body">
                 <div className="main-chat-realtime-content">
-                  <div className="realtime-title"></div>
+                  <div className="realtime-title">실시간 동작 확인</div>
                   <div className="realtime-box-frame">
                     <div className="realtime-box">
-                      <div className="realtime-box-sub-tittle"></div>
-                      <div className="realtime-box-text"></div>
+                      <div className="realtime-box-sub-tittle">주행 속도</div>
+                      <div className="realtime-box-text">55km/h</div>
                     </div>
-                    <div className=""></div>
-                    <div className=""></div>
+                    <div className="realtime-box">
+                      <div className="realtime-box-sub-tittle">주행 방향</div>
+                      <div className="realtime-box-text">직진</div>
+                    </div>
+                    <div className="realtime-box">
+                      <div className="realtime-box-sub-tittle">현재 위치</div>
+                      <div className="realtime-box-text">( 1 , 3 )</div>
+                    </div>
                   </div>
                 </div>
                 <div className="main-chat-box box-dongjak">.</div>
@@ -74,7 +80,6 @@ function MainPage() {
                 <div className="main-chat-box box-dongjak">.</div>
                 <div className="main-chat-box box-dongjak">.</div>
                 <div className="main-chat-box box-dongjak">.</div>
-                <div className="main-chat-box box-sinho">.</div>
               </div>
             </div>
           </div>
