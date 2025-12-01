@@ -1,3 +1,5 @@
+// src/pages/MainPage.jsx
+
 import "../styles/mainPage.css";
 import mapImage from "../assets/map-background.jpg";
 import { useNavigate } from "react-router-dom";
@@ -5,12 +7,15 @@ import { useContext, useState, useEffect } from "react";
 import { RoleContext } from "../context/RoleContext.jsx";
 
 import { renderEV, renderAV, renderControl } from "../utils/messageFormatter";
-import { createFakeSocket } from "../utils/fakeSocket";
+// 소켓만 교체!
+import { createFakeSocket as createRealSocket } from "../utils/fakeSocket";
+// import { createRealSocket } from "../utils/realSocket"; // ← realsocket 사용 시 주석 해제
+
 
 function MainPage() {
   const { role } = useContext(RoleContext);
   const [popup, setPopup] = useState(true);
-  const [messages, setMessages] = useState([]); // ★ 실시간 로그 저장
+  const [messages, setMessages] = useState([]);
 
   const navigate = useNavigate();
 
@@ -18,24 +23,39 @@ function MainPage() {
     navigate("/");
   };
 
-  // -------------------------------
-  //  Fake WebSocket 연결
-  // -------------------------------
+  // -------------------------------------
+  //   REAL WebSocket 연결 (Control Tower 기준)
+  // -------------------------------------
   useEffect(() => {
-    const stop = createFakeSocket((packet) => {
+    const stop = createRealSocket((packet) => {
       let messageArray = [];
 
-      if (role === "EV") messageArray = renderEV(packet.data);
-      if (role === "AV") messageArray = renderAV(packet.data);
-      if (role === "CONTROL") messageArray = renderControl(packet.data);
+      console.log("[MAINPAGE PACKET RECEIVED]", packet);
 
-      // 배열이 아닌 경우를 위한 처리
+      // ==============================
+      // 1) TYPE 기반 메시지 분기
+      // ==============================
+      if (packet.type === "EV") {
+        messageArray = renderEV(packet.data);
+      }
+
+      if (packet.type === "AV1" || packet.type === "AV2") {
+        messageArray = renderAV(packet.data);
+      }
+
+      if (packet.type === "CONTROL") {
+        messageArray = renderControl(packet.data);
+      }
+
+      // ==============================
+      // 3) 메시지 push
+      // ==============================
       if (!Array.isArray(messageArray)) {
         messageArray = [];
       }
 
       setMessages((prev) => [...prev, ...messageArray]);
-    });
+    }, role);
 
     return () => stop();
   }, [role]);
@@ -61,7 +81,8 @@ function MainPage() {
             <div className="role-tab-wrapper-m">
               <button
                 className={`role-tab-m ${popup ? "active-m" : ""}`}
-                onClick={() => setPopup(!popup)}>
+                onClick={() => setPopup(!popup)}
+              >
                 Chat
               </button>
               <button className="role-tab-m" onClick={goToHomePage}>
@@ -79,10 +100,10 @@ function MainPage() {
                 <div className="main-chat-title">통신 로그</div>
               </div>
 
-              {/* 🔥 여기에 실시간 메세지가 들어간다 */}
+              {/* 실시간 메시지 */}
               <div className="main-chat-popup-body">
                 {messages
-                  .filter((m) => m.text && m.text.trim() !== "") // ★ 빈 메시지 제거
+                  .filter((m) => m.text && m.text.trim() !== "")
                   .map((m, i) => (
                     <div
                       key={i}

@@ -1,109 +1,164 @@
 // src/utils/messageFormatter.js
 
-// 공통 변환
-function formatCommon(data) {
-  let lines = [];
-
-  if (data.speed !== undefined)
-    lines.push(`⚡ 현재 속도는 ${data.speed}km/h 입니다`);
-
-  if (data.lane_change !== undefined)
-    lines.push(data.lane_change ? `↪️ 차선을 변경하고 있습니다` : `➡️ 현재 차선을 유지하고 있습니다`);
-
-  if (data.direction)
-    lines.push(
-      data.direction === "STRAIGHT"
-        ? "⬆️ 직진으로 진행 중입니다"
-        : data.direction === "LEFT"
-        ? "⬅️ 좌회전으로 진행 중입니다"
-        : "➡️ 우회전으로 진행 중입니다"
-    );
-
-  if (data.position)
-    lines.push(`📍 현재 위치는 (${data.position[0]}, ${data.position[1]}) 입니다`);
-
-  return lines;
+// --------------------------------------
+// 0) prefix(출처 표시) 적용 도우미
+// --------------------------------------
+function withPrefix(role, messages) {
+  return messages.map(m => ({
+    ...m,
+    text: `[${role}] ${m.text}`
+  }));
 }
 
-// EV
+
+
+// --------------------------------------
+// 1) SIMPLE STATE (속도/방향/위치) → 값만 전달
+// --------------------------------------
+function formatSimpleState(data) {
+  let messages = [];
+
+  if (data.speed !== undefined) {
+    messages.push({
+      text: `${data.speed}km/h`,
+      isSinho: false,
+      key: "speed"
+    });
+  }
+
+  if (data.direction) {
+    const dirMap = {
+      STRAIGHT: "직진",
+      LEFT: "좌회전",
+      RIGHT: "우회전"
+    };
+
+    messages.push({
+      text: dirMap[data.direction] || data.direction,
+      isSinho: false,
+      key: "direction"
+    });
+  }
+
+  if (data.position) {
+    messages.push({
+      text: `(${data.position[0]}, ${data.position[1]})`,
+      isSinho: false,
+      key: "position"
+    });
+  }
+
+  return messages;
+}
+
+
+
+// --------------------------------------
+// 2) EV FORMATTER
+// --------------------------------------
 export function renderEV(data) {
   let messages = [];
 
-  // dongjak - 상태정보
-  let stateLines = formatCommon(data);
-  stateLines.forEach(line => messages.push({ text: line, isSinho: false }));
+  // 상태 값 (simple)
+  messages.push(...formatSimpleState(data));
 
-  // sinho - 이벤트
-  if (data.emergency) 
-    messages.push({ text: `🚨 응급 모드가 활성화되었습니다`, isSinho: true });
+  // 차선 변경 → 신호
+  if (data.lane_change !== undefined) {
+    messages.push({
+      text: data.lane_change ? "차선 변경 중" : "차선 유지 중",
+      isSinho: true,
+      key: "lane_change"
+    });
+  }
 
-  if (data.delivered_to)
-    messages.push({ text: `📡 신호 전송이 완료되었습니다. 대상: ${data.delivered_to.join(", ")}`, isSinho: true });
+  // 응급 모드 이벤트
+  if (data.emergency) {
+    messages.push({
+      text: "응급 모드 활성화",
+      isSinho: true
+    });
+  }
 
-  return messages;
+  // 신호 전달 성공
+  if (data.delivered_to) {
+    messages.push({
+      text: `신호 전송 완료 → ${data.delivered_to.join(", ")}`,
+      isSinho: true
+    });
+  }
+
+  return withPrefix("EV", messages);
 }
 
-// AV
+
+
+// --------------------------------------
+// 3) AV FORMATTER (AV1 / AV2 공통)
+// --------------------------------------
 export function renderAV(data) {
   let messages = [];
 
-  // dongjak - 상태정보
-  let stateLines = formatCommon(data);
-  stateLines.forEach(line => messages.push({ text: line, isSinho: false }));
+  // 상태 값
+  messages.push(...formatSimpleState(data));
 
-  // sinho - 응급 감지
-  if (data.alert_radius !== undefined && data.emergency_present !== undefined) {
-    if (data.emergency_present) {
-      messages.push({ 
-        text: `⚠️ 반경 ${data.alert_radius}km 내에 응급 차량이 감지되었습니다. 주의하시기 바랍니다`, 
-        isSinho: true 
-      });
-    } else {
-      messages.push({ 
-        text: `✅ 응급 상황이 해제되었습니다`, 
-        isSinho: true 
-      });
-    }
+  // 차선 변경 → 신호
+  if (data.lane_change !== undefined) {
+    messages.push({
+      text: data.lane_change ? "차선 변경 중" : "차선 유지 중",
+      isSinho: true,
+      key: "lane_change"
+    });
   }
 
-  // sinho - EV 신호 수신
-  if (data.emergency_ev)
-    messages.push({ 
-      text: `🚨 ${data.emergency_ev.id}로부터 응급 신호를 수신했습니다`, 
-      isSinho: true 
+  // 응급 감지/해제
+  if (data.alert_radius !== undefined && data.emergency_present !== undefined) {
+    messages.push({
+      text: data.emergency_present
+        ? `반경 ${data.alert_radius}km 내 응급 차량 감지`
+        : `응급 상황 해제`,
+      isSinho: true
     });
+  }
 
-  return messages;
+  // EV 신호 수신
+  if (data.emergency_ev) {
+    messages.push({
+      text: `${data.emergency_ev.id}로부터 응급 신호 수신`,
+      isSinho: true
+    });
+  }
+
+  const prefix = data.id || "AV";
+  return withPrefix(prefix, messages);
 }
 
-// Control Tower
+
+
+// --------------------------------------
+// 4) CONTROL FORMATTER
+// --------------------------------------
 export function renderControl(data) {
   let messages = [];
 
-  // dongjak - 차량 리스트
+  // 전체 차량 목록 전달
   if (data.vehicles) {
     data.vehicles.forEach(v => {
-      messages.push({ 
-        text: `📊 ${v.id} — 속도 ${v.speed}km/h, 위치 (${v.position[0]}, ${v.position[1]})`, 
-        isSinho: false 
+      messages.push({
+        text: `${v.id} | ${v.speed}km/h | (${v.position[0]}, ${v.position[1]})`,
+        isSinho: false
       });
     });
   }
 
-  // sinho - EV 존재 여부
+  // 응급 차량 존재 여부
   if (data.alert_radius !== undefined && data.emergency_present !== undefined) {
-    if (data.emergency_present) {
-      messages.push({ 
-        text: `🚨 반경 ${data.alert_radius}km 내에 응급 차량이 있습니다`, 
-        isSinho: true 
-      });
-    } else {
-      messages.push({ 
-        text: `✅ 반경 ${data.alert_radius}km 내에 응급 차량이 없습니다`, 
-        isSinho: true 
-      });
-    }
+    messages.push({
+      text: data.emergency_present
+        ? `반경 ${data.alert_radius}km 내 응급 차량 존재`
+        : "반경 내 안정 상태",
+      isSinho: true
+    });
   }
 
-  return messages;
+  return withPrefix("CONTROL", messages);
 }
