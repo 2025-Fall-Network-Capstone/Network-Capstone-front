@@ -7,10 +7,10 @@ import { useContext, useState, useEffect } from "react";
 import { RoleContext } from "../context/RoleContext.jsx";
 
 import { renderEV, renderAV, renderControl } from "../utils/messageFormatter";
-// 소켓만 교체!
-import { createFakeSocket as createRealSocket } from "../utils/fakeSocket";
-// import { createRealSocket } from "../utils/realSocket"; // ← realsocket 사용 시 주석 해제
 
+// 소켓 전환: fake 테스트 중
+import { createFakeSocket as createRealSocket } from "../utils/fakeSocket";
+// import { createRealSocket } from "../utils/realSocket";
 
 function MainPage() {
   const { role } = useContext(RoleContext);
@@ -18,41 +18,62 @@ function MainPage() {
   const [messages, setMessages] = useState([]);
 
   const navigate = useNavigate();
+  const goToHomePage = () => navigate("/");
 
-  const goToHomePage = () => {
-    navigate("/");
+  // -----------------------------
+  // 역할별 필터링 규칙
+  // -----------------------------
+  const shouldDisplay = (packet) => {
+    // EV UI
+    if (role === "EV") {
+      return (
+        packet.type === "EV" ||                // 내 상태
+        packet.type === "CONTROL"              // 관제가 EV에게 주는 정보
+      );
+    }
+
+    // AV1 UI
+    if (role === "AV1") {
+      return (
+        packet.type === "AV1" ||               // 내 상태
+        packet.type === "EV" ||                // EV 사건/신호
+        packet.type === "CONTROL"              // 관제 정보
+      );
+    }
+
+    // AV2 UI
+    if (role === "AV2") {
+      return (
+        packet.type === "AV2" ||               // 내 상태
+        packet.type === "EV" ||                // EV 사건/신호
+        packet.type === "CONTROL"              // 관제 정보
+      );
+    }
+
+    // CONTROL UI (모두 표시)
+    if (role === "CONTROL") return true;
+
+    return false;
   };
 
   // -------------------------------------
-  //   REAL WebSocket 연결 (Control Tower 기준)
+  //  REAL WebSocket 연결
   // -------------------------------------
   useEffect(() => {
     const stop = createRealSocket((packet) => {
-      let messageArray = [];
+      // !!! 역할에 따라 시각화할지 말지를 결정 !!!
+      if (!shouldDisplay(packet)) return;
 
+      let messageArray = [];
       console.log("[MAINPAGE PACKET RECEIVED]", packet);
 
-      // ==============================
-      // 1) TYPE 기반 메시지 분기
-      // ==============================
-      if (packet.type === "EV") {
-        messageArray = renderEV(packet.data);
-      }
-
-      if (packet.type === "AV1" || packet.type === "AV2") {
+      // 타입별 메시지 포맷팅
+      if (packet.type === "EV") messageArray = renderEV(packet.data);
+      if (packet.type === "AV1" || packet.type === "AV2")
         messageArray = renderAV(packet.data);
-      }
+      if (packet.type === "CONTROL") messageArray = renderControl(packet.data);
 
-      if (packet.type === "CONTROL") {
-        messageArray = renderControl(packet.data);
-      }
-
-      // ==============================
-      // 3) 메시지 push
-      // ==============================
-      if (!Array.isArray(messageArray)) {
-        messageArray = [];
-      }
+      if (!Array.isArray(messageArray)) messageArray = [];
 
       setMessages((prev) => [...prev, ...messageArray]);
     }, role);
@@ -65,6 +86,7 @@ function MainPage() {
       <img src={mapImage} className="main-background-img" />
 
       <div className="main-content">
+
         {/* HEADER */}
         <div className="main-header-section">
           <header className="nav-bar-m">
@@ -100,7 +122,6 @@ function MainPage() {
                 <div className="main-chat-title">통신 로그</div>
               </div>
 
-              {/* 실시간 메시지 */}
               <div className="main-chat-popup-body">
                 {messages
                   .filter((m) => m.text && m.text.trim() !== "")
@@ -115,6 +136,7 @@ function MainPage() {
                     </div>
                   ))}
               </div>
+
             </div>
           </div>
         )}
