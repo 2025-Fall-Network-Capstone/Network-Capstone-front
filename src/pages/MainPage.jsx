@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useContext, useState, useEffect } from "react";
 import { RoleContext } from "../context/RoleContext.jsx";
 
-import { renderEV, renderAV, renderControl } from "../utils/messageFormatter";
+// import { renderEV, renderAV, renderControl } from "../utils/messageFormatter";
 import { createRealSocket } from "../utils/realSocket";
 
 function MainPage() {

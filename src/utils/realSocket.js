@@ -72,7 +72,5 @@ export function createRealSocket(onMessage, role) {
     });
   });
 
-  return () => {
-    socket.disconnect();
-  };
+  return socket;
 }
