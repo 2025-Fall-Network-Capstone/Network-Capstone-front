@@ -2,7 +2,7 @@
 import { io } from "socket.io-client";
 
 export function createRealSocket(onMessage, role) {
-  const socket = io("http://127.0.0.1:5003", {
+  const socket = io("http://192.168.0.92:5003", {
     transports: ["websocket"]
   });
 

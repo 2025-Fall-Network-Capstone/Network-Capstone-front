@@ -17,9 +17,9 @@ function MainPage() {
   const navigate = useNavigate();
   const goToHomePage = () => navigate("/");
 
-  // -----------------------------
-  // 역할별 필터링 규칙
-  // -----------------------------
+  //------------------------------------------------------
+  // 역할별 필터링
+  //------------------------------------------------------
   const shouldDisplay = (packet) => {
     if (role === "EV") {
       return packet.type === "EV" || packet.type === "CONTROL";
@@ -42,19 +42,19 @@ function MainPage() {
     return false;
   };
 
-  // -------------------------------------
-  // REAL WebSocket 연결 + 관제 시작 이벤트 전송
-  // -------------------------------------
+  //------------------------------------------------------
+  // REAL WebSocket 연결 + CONTROL 역할 start emit
+  //------------------------------------------------------
   useEffect(() => {
     if (!role) return;
 
-    // createRealSocket가 socket을 리턴한다고 가정
+    // socket 객체 받아오기 (중요!!)
     const socket = createRealSocket((packet) => {
       if (!shouldDisplay(packet)) return;
 
-      let messageArray = [];
       console.log("[MAINPAGE PACKET RECEIVED]", packet);
 
+      let messageArray = [];
       if (packet.type === "EV") messageArray = renderEV(packet.data);
       if (packet.type === "AV1" || packet.type === "AV2")
         messageArray = renderAV(packet.data);
@@ -65,21 +65,32 @@ function MainPage() {
       setMessages((prev) => [...prev, ...messageArray]);
     }, role);
 
-    // 🔥🔥🔥 ADD: 관제 역할일 경우 시작 이벤트 emit
+    //-----------------------------
+    // CONTROL이면 연결 후 control_start emit
+    //-----------------------------
     if (role === "CONTROL") {
-      socket.emit("control_start", {
-        role: "CONTROL",
-        timestamp: Date.now()
+      socket.on("connect", () => {
+        console.log("[CONTROL SOCKET CONNECTED]");
+
+        socket.emit("control_start", {
+          role: "CONTROL",
+          timestamp: Date.now(),
+        });
+
+        console.log("[SOCKET EMIT] control_start 전송 완료");
       });
-      console.log("[SOCKET EMIT] control_start 전송 완료");
     }
-    // 🔥🔥🔥 끝
 
     return () => {
-      socket.disconnect();
+      if (socket && socket.disconnect) {
+        socket.disconnect();
+      }
     };
   }, [role]);
 
+  //------------------------------------------------------
+  // UI Rendering
+  //------------------------------------------------------
   return (
     <div className="main-page-root">
       <img src={mapImage} className="main-background-img" />
@@ -127,7 +138,6 @@ function MainPage() {
               </div>
 
               <div className="main-chat-popup-body">
-                
                 <div className="main-chat-realtime-content">
                   <div className="realtime-title">실시간 동작 확인</div>
                   <div className="realtime-box-frame">
@@ -145,25 +155,26 @@ function MainPage() {
                     </div>
                   </div>
                 </div>
+
                 <div className="main-chat-box box-dongjak">.</div>
                 <div className="main-chat-box box-dongjak">.</div>
                 <div className="main-chat-box box-dongjak">.</div>
                 <div className="main-chat-box box-dongjak">.</div>
                 <div className="main-chat-box box-dongjak">.</div>
               </div>
-              {messages
-                  .filter((m) => m.text && m.text.trim() !== "")
-                  .map((m, i) => (
-                    <div
-                      key={i}
-                      className={`main-chat-box ${
-                        m.isSinho ? "box-sinho" : "box-dongjak"
-                      }`}
-                    >
-                      {m.text}
-                    </div>
-                  ))}
 
+              {messages
+                .filter((m) => m.text && m.text.trim() !== "")
+                .map((m, i) => (
+                  <div
+                    key={i}
+                    className={`main-chat-box ${
+                      m.isSinho ? "box-sinho" : "box-dongjak"
+                    }`}
+                  >
+                    {m.text}
+                  </div>
+                ))}
             </div>
           </div>
         )}
