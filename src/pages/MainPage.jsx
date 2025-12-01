@@ -9,8 +9,8 @@ import { RoleContext } from "../context/RoleContext.jsx";
 import { renderEV, renderAV, renderControl } from "../utils/messageFormatter";
 
 // 소켓 전환: fake 테스트 중
-import { createFakeSocket as createRealSocket } from "../utils/fakeSocket";
-// import { createRealSocket } from "../utils/realSocket";
+//import { createFakeSocket as createRealSocket } from "../utils/fakeSocket";
+import { createRealSocket } from "../utils/realSocket";
 
 function MainPage() {
   const { role } = useContext(RoleContext);
