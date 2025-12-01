@@ -52,24 +52,23 @@ function MainPage() {
                 <div className="main-chat-title">통신 로그</div>
                 <div className="main-chat-popup-header-right">
                   <span className="right-box sinho">&nbsp;</span>
-                  <span className="right-text">신호</span>
-                  <span className="right-box dongjaK">&nbsp;</span>
                   <span className="right-text">동작</span>
+                  <span className="right-box dongjaK">&nbsp;</span>
+                  <span className="right-text">신호</span>
                 </div>
               </div>
               <div className="main-chat-popup-body">
-                <div className="main-chat-box box-sinho">.</div>
+                <div className="">
+                  <div className=""></div>
+                  <div className=""></div>
+                  <div className=""></div>
+                </div>
                 <div className="main-chat-box box-dongjak">.</div>
                 <div className="main-chat-box box-dongjak">.</div>
                 <div className="main-chat-box box-dongjak">.</div>
                 <div className="main-chat-box box-dongjak">.</div>
                 <div className="main-chat-box box-dongjak">.</div>
                 <div className="main-chat-box box-sinho">.</div>
-                <div className="main-chat-box box-sinho">.</div>
-                <div className="main-chat-box box-sinho">.</div>
-                <div className="main-chat-box box-sinho">.</div>
-                <div className="main-chat-box box-dongjak">.</div>
-                <div className="main-chat-box box-dongjak">.</div>
               </div>
             </div>
           </div>
