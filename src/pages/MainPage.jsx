@@ -58,10 +58,16 @@ function MainPage() {
                 </div>
               </div>
               <div className="main-chat-popup-body">
-                <div className="">
-                  <div className=""></div>
-                  <div className=""></div>
-                  <div className=""></div>
+                <div className="main-chat-realtime-content">
+                  <div className="realtime-title"></div>
+                  <div className="realtime-box-frame">
+                    <div className="realtime-box">
+                      <div className="realtime-box-sub-tittle"></div>
+                      <div className="realtime-box-text"></div>
+                    </div>
+                    <div className=""></div>
+                    <div className=""></div>
+                  </div>
                 </div>
                 <div className="main-chat-box box-dongjak">.</div>
                 <div className="main-chat-box box-dongjak">.</div>
