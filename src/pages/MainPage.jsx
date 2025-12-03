@@ -27,20 +27,11 @@ function MainPage() {
   // 역할별 필터링
   //------------------------------------------------------
   const shouldDisplay = (packet) => {
-    if (role === "EV")
-      return packet.type === "EV" || packet.type === "CONTROL";
+    if (role === "EV") return packet.type === "EV" || packet.type === "CONTROL";
     if (role === "AV1")
-      return (
-        packet.type === "AV1" ||
-        packet.type === "EV" ||
-        packet.type === "CONTROL"
-      );
+      return packet.type === "AV1" || packet.type === "EV" || packet.type === "CONTROL";
     if (role === "AV2")
-      return (
-        packet.type === "AV2" ||
-        packet.type === "EV" ||
-        packet.type === "CONTROL"
-      );
+      return packet.type === "AV2" || packet.type === "EV" || packet.type === "CONTROL";
     if (role === "CONTROL") return true;
     return false;
   };
@@ -117,8 +108,7 @@ function MainPage() {
             <div className="role-tab-wrapper-m">
               <button
                 className={`role-tab-m ${popup ? "active-m" : ""}`}
-                onClick={() => setPopup(!popup)}
-              >
+                onClick={() => setPopup(!popup)}>
                 Chat
               </button>
               <button className="role-tab-m" onClick={goToHomePage}>
@@ -150,16 +140,12 @@ function MainPage() {
                   <div className="realtime-box-frame">
                     <div className="realtime-box">
                       <div className="realtime-box-sub-tittle">주행 속도</div>
-                      <div className="realtime-box-text">
-                        {liveState.speed} km/h
-                      </div>
+                      <div className="realtime-box-text">{liveState.speed} km/h</div>
                     </div>
 
                     <div className="realtime-box">
                       <div className="realtime-box-sub-tittle">주행 방향</div>
-                      <div className="realtime-box-text">
-                        {liveState.direction}
-                      </div>
+                      <div className="realtime-box-text">{liveState.direction}</div>
                     </div>
 
                     <div className="realtime-box">
@@ -175,10 +161,7 @@ function MainPage() {
                 {messages.map((m, i) => (
                   <div
                     key={i}
-                    className={`main-chat-box ${
-                      m.isSinho ? "box-sinho" : "box-dongjak"
-                    }`}
-                  >
+                    className={`main-chat-box ${m.isSinho ? "box-sinho" : "box-dongjak"}`}>
                     {m.text}
                   </div>
                 ))}
