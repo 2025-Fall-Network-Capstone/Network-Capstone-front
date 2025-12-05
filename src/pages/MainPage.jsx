@@ -158,14 +158,18 @@ function MainPage() {
     }, role);
 
     // CONTROL 시작 신호
-    if (role === "CONTROL") {
-      mainSocket.on("connect", () => {
+    const sendControlStart = () => {
+      if (role !== "CONTROL") return;
+
+      setTimeout(() => {
         mainSocket.emit("control_start", {
           role: "CONTROL",
           timestamp: Date.now(),
         });
-      });
-    }
+        console.log("[CONTROL] control_start signal sent");
+      }, 2000);
+    };
+
 
     return () => {
       mainSocket.disconnect();
