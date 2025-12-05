@@ -68,7 +68,6 @@ function MainPage() {
   // -----------------------------------------------------
 
   const handleStatusAll = (allStates) => {
-    
     let logs = [];
 
     const EV = allStates.EV;
@@ -149,13 +148,9 @@ function MainPage() {
 
         // 🔥 SELF STATE에서도 stage 5 감지
         if (packet.data.stage === 5) {
-          setLogQueue(prev => [
-            ...prev,
-            "EV가 반경 2km를 벗어났습니다."
-          ]);
+          setLogQueue((prev) => [...prev, "EV가 반경 2km를 벗어났습니다."]);
         }
       }
-
 
       // 차량 위치 업데이트 (EV/AV 전용)
       if (["EV", "AV1", "AV2"].includes(packet.type)) {
@@ -181,18 +176,13 @@ function MainPage() {
         }
       }
 
-
       // STATUS_ALL 처리
       if (packet.type === "STATUS_ALL") {
         const allStates = packet.data;
         const currentStage = globalStage;
 
-
         if (currentStage === 5) {
-            setLogQueue(prev => [
-                ...prev,
-                "EV가 반경 2km를 벗어났습니다."
-            ]);
+          setLogQueue((prev) => [...prev, "EV가 반경 2km를 벗어났습니다."]);
         }
 
         // 4-1) 자연어 로그 생성
@@ -230,7 +220,7 @@ function MainPage() {
               if (!stage3TimerRef.current) {
                 stage3TimerRef.current = setTimeout(() => {
                   setItems((prev) =>
-                    prev.map((v) => (v.name === item.name ? { ...v, row: 1, col: 6 } : v))
+                    prev.map((v) => (v.name === "EV" ? { ...v, row: 1, col: 6 } : v))
                   );
                 }, 5000);
               }
