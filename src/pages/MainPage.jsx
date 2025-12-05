@@ -311,11 +311,12 @@ function MainPage() {
                 )}
 
                 <div className="main-chat-popup-body">
-                  {messages.map((m, i) => (
-                    <div key={i} className={`main-chat-box box-dongjak`}>
+                  {[...messages].reverse().map((m, i) => (
+                    <div key={i} className="main-chat-box box-dongjak">
                       {m.text}
                     </div>
                   ))}
+
                 </div>
               </div>
             </div>
