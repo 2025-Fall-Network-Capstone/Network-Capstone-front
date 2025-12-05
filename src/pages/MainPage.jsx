@@ -37,22 +37,17 @@ function MainPage() {
   const fmtPosition = (pos) => `(${pos?.[0]}, ${pos?.[1]})`;
 
   const logEVState = (state) =>
-    `EV 차량이 현재 ${state.speed}km/h 속도로 주행 중입니다. 방향은 ${
-      state.direction
-    }이며 위치는 ${fmtPosition(state.position)}입니다.`;
+    `EV가 현재 시속 ${state.speed}km/h로 이동 중입니다. 방향은 ${state.direction}, 위치는 ${fmtPosition(state.position)}입니다.`;
 
   const logAVState = (state) =>
-    `${state.id} 차량이 현재 ${state.speed}km/h로 이동 중입니다. 방향은 ${
-      state.direction
-    }이며 위치는 ${fmtPosition(state.position)}입니다.`;
+    `${state.id}가 시속 ${state.speed}km/h로 주행하고 있습니다. 방향은 ${state.direction}, 위치는 ${fmtPosition(state.position)}입니다.`;
 
   const logEmergency = (state) =>
-    state.emergency ? `EV 차량이 응급상황 신호를 전송했습니다.` : null;
+    state.emergency ? `EV가 응급상황을 주변 차량에 전달했습니다.` : null;
 
   const logLaneChange = (state) =>
-    state.lane_change ? `${state.id} 차량이 차선 변경을 수행 중입니다.` : null;
+    state.lane_change ? `${state.id}가 차선 변경을 수행 중입니다.` : null;
 
-  const logStageUpdate = (stage) => `관제가 단계 ${stage} 신호를 전송했습니다.`;
 
   // -----------------------------------------------------
   // 역할별로 어떤 로그를 출력할지 결정하는 함수
@@ -65,26 +60,20 @@ function MainPage() {
     const AV1 = allStates.AV1;
     const AV2 = allStates.AV2;
 
-    // -----------------------------
     // CONTROL → 모든 차량 상태 출력
-    // -----------------------------
     if (role === "CONTROL") {
       logs.push(logEVState(EV));
       logs.push(logAVState(AV1));
       logs.push(logAVState(AV2));
     }
 
-    // -----------------------------
     // EV → 다른 차량 상태만 출력
-    // -----------------------------
     if (role === "EV") {
       logs.push(logAVState(AV1));
       logs.push(logAVState(AV2));
     }
 
-    // -----------------------------
     // AV 차량 → 자기 제외 + EV 메시지 + 상대 AV 메시지
-    // -----------------------------
     if (role === "AV1") {
       logs.push(logEVState(EV));
       logs.push(logAVState(AV2));
@@ -94,13 +83,22 @@ function MainPage() {
       logs.push(logAVState(AV1));
     }
 
-    // emergency / lane_change 기반 메시지 추가
+    // emergency / lane_change 메시지
     const dynamicMsgs = [logEmergency(EV), logLaneChange(AV1), logLaneChange(AV2)].filter(Boolean);
 
     logs = [...dynamicMsgs, ...logs];
 
-    // 메시지 저장
-    setMessages((prev) => [...prev, ...logs.map((t) => ({ text: t, isSinho: false }))]);
+    // -----------------------------------------------------
+    // ★ 변경됨: 로그를 한 줄씩 1초 간격으로 UI에 추가
+    // -----------------------------------------------------
+    logs
+      .map((msg) => msg && msg.trim())
+      .filter(Boolean)
+      .forEach((text, idx) => {
+        setTimeout(() => {
+          setMessages((prev) => [...prev, { text, isSinho: false }]);
+        }, idx * 1000); // 1줄씩 1초 간격 출력
+      });
   };
 
   // -----------------------------------------------------
@@ -112,9 +110,7 @@ function MainPage() {
     const { mainSocket, controlSocket } = createRealSocket((packet) => {
       console.log("[MAINPAGE PACKET RECEIVED]", packet);
 
-      // -----------------------------------
-      // 실시간 자신의 상태 업데이트
-      // -----------------------------------
+      // 자신의 상태 업데이트
       if (packet.type === role && packet.data) {
         setLiveState({
           speed: packet.data.speed ?? 0,
@@ -123,9 +119,7 @@ function MainPage() {
         });
       }
 
-      // -----------------------------------
-      // 차량별 위치 표시 (UI)
-      // -----------------------------------
+      // 차량 위치 표시 업데이트
       if (["EV", "AV1", "AV2"].includes(packet.type)) {
         setItems((prevItems) =>
           prevItems.map((item) =>
@@ -140,9 +134,7 @@ function MainPage() {
         );
       }
 
-      // -----------------------------------
-      // stage 업데이트는 자연어 로그로 출력
-      // -----------------------------------
+      // stage 로그
       if (packet.type === "STAGE") {
         setMessages((prev) => [
           ...prev,
@@ -150,13 +142,10 @@ function MainPage() {
         ]);
       }
 
-      // -----------------------------------
-      // status_all 처리 (핵심)
-      // -----------------------------------
+      // STATUS_ALL 처리 (핵심)
       if (packet.type === "STATUS_ALL") {
         handleStatusAll(packet.data);
 
-        // ⭐⭐ 추가된 부분: status_all로도 실시간 박스 업데이트
         const myState = packet.data[role];
         if (myState) {
           setLiveState({
@@ -210,7 +199,8 @@ function MainPage() {
             <div className="role-tab-wrapper-m">
               <button
                 className={`role-tab-m ${popup ? "active-m" : ""}`}
-                onClick={() => setPopup(!popup)}>
+                onClick={() => setPopup(!popup)}
+              >
                 Chat
               </button>
               <button className="role-tab-m" onClick={goToHomePage}>
@@ -233,7 +223,8 @@ function MainPage() {
                       gridColumnStart: item.col + 1,
                       gridRowStart: item.row + 1,
                       backgroundColor: item.color,
-                    }}>
+                    }}
+                  >
                     {item.name}
                   </div>
                 ))}
@@ -242,7 +233,7 @@ function MainPage() {
                 <div className="col-border" style={{ gridColumn: "2 / 4" }} />
                 <div
                   className="col-border"
-                  style={{ gridColumn: "5 / 7", borderLeft: "10px dashed #ffffff" }}
+                  style={{ gridColumn: "5 /7", borderLeft: "10px dashed #ffffff" }}
                 />
                 <div className="col-border" style={{ gridColumn: "8 / 10" }} />
               </div>
@@ -255,6 +246,7 @@ function MainPage() {
                 <div className="main-chat-popup-header">
                   <div className="main-chat-title">통신 로그</div>
                 </div>
+
                 {/* 실시간 박스 */}
                 {role !== "CONTROL" && (
                   <div className="main-chat-realtime-content">
@@ -281,18 +273,20 @@ function MainPage() {
                   </div>
                 )}
 
+                {/* 로그 박스 */}
                 <div className="main-chat-popup-body">
-                  {/* 로그 리스트 */}
                   {messages.map((m, i) => (
-                    <div key={i} className={`main-chat-box box-dongjak`}>
+                    <div key={i} className="main-chat-box box-dongjak">
                       {m.text}
                     </div>
                   ))}
                 </div>
+
               </div>
             </div>
           )}
         </div>
+
       </div>
     </div>
   );
