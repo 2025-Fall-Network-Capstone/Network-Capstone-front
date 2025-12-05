@@ -2,7 +2,21 @@
 import { io } from "socket.io-client";
 
 export function createRealSocket(onMessage, role) {
-  const socket = io("http://192.168.0.119:5003", {
+
+  // 🔥 1) 역할별 서버 주소 매핑
+  const SERVER_MAP = {
+    EV: "http://192.168.0.34:5000",
+    AV1: "http://192.168.0.118:5001",
+    AV2: "http://192.168.0.7:5002",
+    CONTROL: "http://192.168.0.119:5003",
+  };
+
+  // 🔥 2) role 기반으로 접속 서버 선택
+  const targetServer = SERVER_MAP[role];
+  console.log(`%c[REAL SOCKET] Connecting to ${targetServer} for role=${role}`, "color: orange;");
+
+  // 🔥 3) 실제 소켓 연결
+  const socket = io(targetServer, {
     transports: ["websocket"],
   });
 
@@ -27,11 +41,12 @@ export function createRealSocket(onMessage, role) {
   };
 
   //------------------------------------------------------
-  // --- 연결 ---
+  // 🔥 --- 연결 ---
   //------------------------------------------------------
   socket.on("connect", () => {
-    console.log(`[REAL SOCKET] Connected (role=${role})`);
+    console.log(`%c[REAL SOCKET] Connected to ${targetServer} (role=${role})`, "color: green;");
 
+    // 차량 서버는 register를 사용할 수도, 안 할 수도 있음
     socket.emit("register", { role });
   });
 
@@ -44,13 +59,12 @@ export function createRealSocket(onMessage, role) {
   });
 
   //------------------------------------------------------
-  // 1) vehicle_update
+  // 1) vehicle_state
   //------------------------------------------------------
-  socket.on("vehicle_update", (packet) => {
+  socket.on("vehicle_state", (packet) => {
     const { id, state } = packet;
 
-    debugLog(id, "vehicle_update 수신");
-
+    debugLog(id, "vehicle_state 수신");
     console.log(`[REAL SOCKET] ${id} STATE:`, state);
 
     onMessage({
@@ -80,7 +94,6 @@ export function createRealSocket(onMessage, role) {
   //------------------------------------------------------
   socket.on("stage_update", (packet) => {
     debugLog("STAGE", "stage_update 수신");
-
     console.log("[REAL SOCKET] STAGE UPDATE:", packet);
 
     onMessage({
