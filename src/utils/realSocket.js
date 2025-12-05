@@ -12,11 +12,6 @@ export function createRealSocket(onMessage, role) {
     CONTROL: "http://172.20.96.208:5003",
   };
 
-  // ⭐ 역할 유효성 검사 (중요!)
-  if (!role || !SERVER_MAP[role]) {
-    console.error("[REAL SOCKET] INVALID ROLE → 연결 중지:", role);
-    return { mainSocket: null, controlSocket: null };
-  } 
 
   const myServer = SERVER_MAP[role];
 
