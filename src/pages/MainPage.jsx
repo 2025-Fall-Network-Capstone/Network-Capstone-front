@@ -283,20 +283,25 @@ function MainPage() {
                 col: originalCol,
               };
 
-              // 5초 후 (1,6)으로 이동시키는 타이머 (중복 방지)
-              if (!stage3TimerRef.current) {
-                stage3TimerRef.current = setTimeout(() => {
-                  setItems((prev) =>
-                    prev.map((v) => (v.name === "EV" ? { ...v, row: 1, col: 6 } : v))
-                  );
-                }, 5000);
+              // -------------------------------
+              // 2) Stage 3 타이머 (단 한 번만!)
+              // -------------------------------
+              if (currentStage === 3) {
+                if (!stage3TimerRef.current) {
+                  stage3TimerRef.current = setTimeout(() => {
+                    setItems((prev) =>
+                      prev.map((v) => (v.name === "EV" ? { ...v, row: 1, col: 6 } : v))
+                    );
+                  }, 5000);
+                }
               }
 
               return updatedItem;
             }
-            // -----------------------------------------------------------------
 
-            // ---------------- 🔄 Stage 4 이상: 원래 위치 복구 ----------------
+            // -------------------------------
+            // 3) Stage 4부터 타이머 정리
+            // -------------------------------
             if (currentStage > 3) {
               if (stage3TimerRef.current) {
                 clearTimeout(stage3TimerRef.current);
