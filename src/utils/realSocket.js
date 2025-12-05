@@ -6,53 +6,68 @@ export function createRealSocket(onMessage, role) {
     transports: ["websocket"],
   });
 
-  // --- 연결 ---
-  socket.on("connect", () => {
-    console.log("[REAL SOCKET] Connected to CONTROL");
+  //------------------------------------------------------
+  // 역할별 필터링 로직 (로그용 — 실제 필터링은 MainPage에서)
+  //------------------------------------------------------
+  const shouldDisplay = (packetType) => {
+    if (role === "EV") return packetType === "EV" || packetType === "CONTROL";
+    if (role === "AV1") return packetType === "AV1" || packetType === "EV" || packetType === "CONTROL";
+    if (role === "AV2") return packetType === "AV2" || packetType === "EV" || packetType === "CONTROL";
+    if (role === "CONTROL") return true;
+    return false;
+  };
 
-    // 접속 시 role 등록
+  const debugLog = (packetType, label) => {
+    const pass = shouldDisplay(packetType);
+
+    console.log(
+      `%c[RS-FILTER] role=${role} | packet=${packetType} | ${label} | 표시 → ${pass}`,
+      `color: ${pass ? "green" : "red"}; font-weight:bold;`
+    );
+  };
+
+  //------------------------------------------------------
+  // --- 연결 ---
+  //------------------------------------------------------
+  socket.on("connect", () => {
+    console.log(`[REAL SOCKET] Connected (role=${role})`);
+
     socket.emit("register", { role });
   });
 
   socket.on("disconnect", () => {
-    console.log("[REAL SOCKET] Disconnected from CONTROL");
+    console.log("[REAL SOCKET] Disconnected");
   });
 
   socket.on("error", (msg) => {
     console.warn("[REAL SOCKET ERROR]", msg);
   });
 
-  // ===================================================
-  // 1) vehicle_update → EV / AV1 / AV2 상태 업데이트
-  // ===================================================
+  //------------------------------------------------------
+  // 1) vehicle_update
+  //------------------------------------------------------
   socket.on("vehicle_update", (packet) => {
-    /*
-      packet 구조:
-      {
-        id: "EV" | "AV1" | "AV2",
-        state: { speed, lane_change, position, ... }
-      }
-    */
-
     const { id, state } = packet;
+
+    debugLog(id, "vehicle_update 수신");
 
     console.log(`[REAL SOCKET] ${id} STATE:`, state);
 
     onMessage({
-      type: id, // "EV" / "AV1" / "AV2"
+      type: id,
       data: state,
     });
   });
 
-  // ===================================================
-  // 2) status_all → 전체 차량 상태 한번에 수신
-  // ===================================================
+  //------------------------------------------------------
+  // 2) status_all
+  //------------------------------------------------------
   socket.on("status_all", (allState) => {
-    // allState = { EV: {...}, AV1: {...}, AV2: {...} }
-
     console.log("[REAL SOCKET] ALL STATE:", allState);
 
     Object.keys(allState).forEach((key) => {
+      debugLog(key, "status_all 개별 패킷");
+
       onMessage({
         type: key,
         data: allState[key],
@@ -60,10 +75,12 @@ export function createRealSocket(onMessage, role) {
     });
   });
 
-  // ===================================================
-  // 3) stage_update → 전체 글로벌 Stage 업데이트
-  // ===================================================
+  //------------------------------------------------------
+  // 3) stage_update
+  //------------------------------------------------------
   socket.on("stage_update", (packet) => {
+    debugLog("STAGE", "stage_update 수신");
+
     console.log("[REAL SOCKET] STAGE UPDATE:", packet);
 
     onMessage({
