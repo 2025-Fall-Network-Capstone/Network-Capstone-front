@@ -180,7 +180,7 @@ function MainPage() {
                 {items.map((item) => (
                   <div
                     key={item.id}
-                    className="grid-item"
+                    className={`grid-item ${item.name === role ? "blink" : ""}`}
                     style={{
                       gridColumnStart: item.col + 1,
                       gridRowStart: item.row + 1,
