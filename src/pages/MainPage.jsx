@@ -42,17 +42,20 @@ function MainPage() {
   const fmtPosition = (pos) => `(${pos?.[0]}, ${pos?.[1]})`;
 
   const logEVState = (state) =>
-    `EV가 현재 시속 ${state.speed}km/h로 이동 중입니다. 방향은 ${state.direction}, 위치는 ${fmtPosition(state.position)}입니다.`;
+    `EV가 현재 시속 ${state.speed}km/h로 이동 중입니다. 방향은 ${
+      state.direction
+    }, 위치는 ${fmtPosition(state.position)}입니다.`;
 
   const logAVState = (state) =>
-    `${state.id}가 시속 ${state.speed}km/h로 주행하고 있습니다. 방향은 ${state.direction}, 위치는 ${fmtPosition(state.position)}입니다.`;
+    `${state.id}가 시속 ${state.speed}km/h로 주행하고 있습니다. 방향은 ${
+      state.direction
+    }, 위치는 ${fmtPosition(state.position)}입니다.`;
 
   const logEmergency = (state) =>
     state.emergency ? `EV가 응급상황을 주변 차량에 전달했습니다.` : null;
 
   const logLaneChange = (state) =>
     state.lane_change ? `${state.id}가 차선 변경을 수행 중입니다.` : null;
-
 
   // -----------------------------------------------------
   // STATUS_ALL 로그 처리 → queue에 넣기
@@ -89,11 +92,7 @@ function MainPage() {
     }
 
     // emergency / lane_change 메시지 추가
-    const dynamicMsgs = [
-      logEmergency(EV),
-      logLaneChange(AV1),
-      logLaneChange(AV2)
-    ].filter(Boolean);
+    const dynamicMsgs = [logEmergency(EV), logLaneChange(AV1), logLaneChange(AV2)].filter(Boolean);
 
     logs = [...dynamicMsgs, ...logs];
 
@@ -115,10 +114,7 @@ function MainPage() {
 
         const [nextLog, ...rest] = prevQueue;
 
-        setMessages((prev) => [
-          ...prev,
-          { text: nextLog, isSinho: false },
-        ]);
+        setMessages((prev) => [...prev, { text: nextLog, isSinho: false }]);
 
         return rest;
       });
@@ -162,18 +158,18 @@ function MainPage() {
 
       // STAGE 변경 로그
       if (packet.type === "STAGE") {
-        setLogQueue((prev) => [
-          ...prev,
-          logStageUpdate(packet.data.stage)
-        ]);
+        setLogQueue((prev) => [...prev, logStageUpdate(packet.data.stage)]);
       }
 
       // STATUS_ALL 처리
       if (packet.type === "STATUS_ALL") {
-        handleStatusAll(packet.data);
+        const allStates = packet.data;
 
-        // liveState 갱신(자기 차량만)
-        const myState = packet.data[role];
+        // 4-1) 자연어 로그 생성
+        handleStatusAll(allStates);
+
+        // 4-2) 자신의 실시간 박스 업데이트
+        const myState = allStates[role];
         if (myState) {
           setLiveState({
             speed: myState.speed ?? 0,
@@ -181,6 +177,20 @@ function MainPage() {
             position: myState.position ?? [0, 0],
           });
         }
+
+        // 4-3) 모든 차량 그리드 위치 업데이트
+        setItems((prevItems) =>
+          prevItems.map((item) => {
+            const state = allStates[item.name];
+            if (!state) return item;
+
+            return {
+              ...item,
+              row: state.position?.[0] ?? item.row,
+              col: state.position?.[1] ?? item.col,
+            };
+          })
+        );
       }
     }, role);
 
@@ -205,7 +215,6 @@ function MainPage() {
   return (
     <div className="main-page-root">
       <div className="main-content">
-
         {/* HEADER */}
         <div className="main-header-section">
           <header className="nav-bar-m">
@@ -226,8 +235,7 @@ function MainPage() {
             <div className="role-tab-wrapper-m">
               <button
                 className={`role-tab-m ${popup ? "active-m" : ""}`}
-                onClick={() => setPopup(!popup)}
-              >
+                onClick={() => setPopup(!popup)}>
                 Chat
               </button>
               <button className="role-tab-m" onClick={goToHomePage}>
@@ -250,8 +258,7 @@ function MainPage() {
                       gridColumnStart: item.col + 1,
                       gridRowStart: item.row + 1,
                       backgroundColor: item.color,
-                    }}
-                  >
+                    }}>
                     {item.name}
                   </div>
                 ))}
@@ -307,11 +314,9 @@ function MainPage() {
                     </div>
                   ))}
                 </div>
-
               </div>
             </div>
           )}
-
         </div>
       </div>
     </div>
