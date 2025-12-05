@@ -71,6 +71,7 @@ function MainPage() {
 
       // 차량 위치 업데이트
       if (packet.type === "EV" || packet.type === "AV1" || packet.type === "AV2") {
+<<<<<<< Updated upstream
         setItems((prevItems) =>
           prevItems.map((item) =>
             item.name === packet.type
@@ -82,6 +83,47 @@ function MainPage() {
               : item
           )
         );
+=======
+        if (packet.type === "EV") {
+          setItems((prevItems) =>
+            prevItems.map((item) =>
+              item.name === "EV"
+                ? {
+                    ...item,
+                    row: packet.data.position[0] ?? item.row,
+                    col: packet.data.position[1] ?? item.col,
+                  }
+                : item
+            )
+          );
+        }
+        if (packet.type === "AV1") {
+          setItems((prevItems) =>
+            prevItems.map((item) =>
+              item.name === "AV1"
+                ? {
+                    ...item,
+                    row: packet.data.position[0] ?? item.row,
+                    col: packet.data.position[1] ?? item.col,
+                  }
+                : item
+            )
+          );
+        }
+        if (packet.type === "AV2") {
+          setItems((prevItems) =>
+            prevItems.map((item) =>
+              item.name === "AV2"
+                ? {
+                    ...item,
+                    row: packet.data.position[0] ?? item.row,
+                    col: packet.data.position[1] ?? item.col,
+                  }
+                : item
+            )
+          );
+        }
+>>>>>>> Stashed changes
       }
 
       setMessages((prev) => [...prev, ...newMsg]);
