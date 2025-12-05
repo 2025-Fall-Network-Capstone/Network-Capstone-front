@@ -2,6 +2,7 @@
 
 import "../styles/mainPage.css";
 import "../styles/gridCar.css";
+
 import { useNavigate } from "react-router-dom";
 import { useContext, useState, useEffect } from "react";
 import { RoleContext } from "../context/RoleContext.jsx";
@@ -9,15 +10,44 @@ import { createRealSocket } from "../utils/realSocket";
 
 function MainPage() {
   const { role } = useContext(RoleContext);
+
   const [popup, setPopup] = useState(true);
   const [messages, setMessages] = useState([]);
 
   // 차량들의 현재 위치 UI 표시용
   const [items, setItems] = useState([
-    { id: 1, name: "CONTROL", row: 1, col: 0, color: "#6BA6A1", border: "0 3px solid #12543E" },
-    { id: 2, name: "AV1", row: 5, col: 3, color: "#9E94D1", border: "0 3px solid #3A2F71" },
-    { id: 3, name: "AV2", row: 5, col: 6, color: "#9E94D1", border: "0 3px solid #3A2F71" },
-    { id: 4, name: "EV", row: 6, col: 6, color: "#C18D94", border: "0 3px solid #751824" },
+    {
+      id: 1,
+      name: "CONTROL",
+      row: 1,
+      col: 0,
+      color: "#6BA6A1",
+      border: "0 3px solid #12543E",
+    },
+    {
+      id: 2,
+      name: "AV1",
+      row: 5,
+      col: 3,
+      color: "#9E94D1",
+      border: "0 3px solid #3A2F71",
+    },
+    {
+      id: 3,
+      name: "AV2",
+      row: 5,
+      col: 6,
+      color: "#9E94D1",
+      border: "0 3px solid #3A2F71",
+    },
+    {
+      id: 4,
+      name: "EV",
+      row: 6,
+      col: 6,
+      color: "#C18D94",
+      border: "0 3px solid #751824",
+    },
   ]);
 
   // 실시간 박스 (자기 자신의 상태만)
@@ -33,30 +63,29 @@ function MainPage() {
   // -----------------------------------------------------
   // 자연어형 문장 생성 함수들(JSON 기반)
   // -----------------------------------------------------
+  const fmtPosition = (pos) => `(${pos?.[0]}, ${pos?.[1]})`;
+
+  const logEVState = (state) =>
+    `EV 차량이 현재 ${state.speed}km/h 속도로 주행 중입니다. 방향은 ${
+      state.direction
+    }이며 위치는 ${fmtPosition(state.position)}입니다.`;
+
+  const logAVState = (state) =>
+    `${state.id} 차량이 현재 ${state.speed}km/h로 이동 중입니다. 방향은 ${
+      state.direction
+    }이며 위치는 ${fmtPosition(state.position)}입니다.`;
+
+  const logEmergency = (state) =>
+    state.emergency ? `EV 차량이 응급상황 신호를 전송했습니다.` : null;
+
+  const logLaneChange = (state) =>
+    state.lane_change ? `${state.id} 차량이 차선 변경을 수행 중입니다.` : null;
+
+  const logStageUpdate = (stage) => `관제가 단계 ${stage} 신호를 전송했습니다.`;
 
   // -----------------------------------------------------
-// 자연어형 문장 생성 함수들(말투 수정됨)
-// -----------------------------------------------------
-
-const fmtPosition = (pos) => `(${pos?.[0]}, ${pos?.[1]})`;
-
-const logEVState = (state) =>
-  `EV가 현재 시속 ${state.speed}km/h로 이동 중입니다. 방향은 ${state.direction}, 위치는 ${fmtPosition(state.position)}입니다.`;
-
-const logAVState = (state) =>
-  `${state.id}가 시속 ${state.speed}km/h로 주행하고 있습니다. 방향은 ${state.direction}, 위치는 ${fmtPosition(state.position)}입니다.`;
-
-const logEmergency = (state) =>
-  state.emergency ? `EV가 응급상황을 주변 차량에 전달했습니다.` : null;
-
-const logLaneChange = (state) =>
-  state.lane_change ? `${state.id}가 차선 변경을 수행 중입니다.` : null;
-
-
+  // 역할별 로그 생성
   // -----------------------------------------------------
-  // 역할별로 어떤 로그를 출력할지 결정하는 함수
-  // -----------------------------------------------------
-
   const handleStatusAll = (allStates) => {
     let logs = [];
 
@@ -64,45 +93,33 @@ const logLaneChange = (state) =>
     const AV1 = allStates.AV1;
     const AV2 = allStates.AV2;
 
-    // CONTROL → 모든 차량 상태 출력
     if (role === "CONTROL") {
       logs.push(logEVState(EV));
       logs.push(logAVState(AV1));
       logs.push(logAVState(AV2));
     }
 
-    // EV → 다른 차량 상태만 출력
     if (role === "EV") {
       logs.push(logAVState(AV1));
       logs.push(logAVState(AV2));
     }
 
-    // AV 차량 → 자기 제외 + EV 메시지 + 상대 AV 메시지
     if (role === "AV1") {
       logs.push(logEVState(EV));
       logs.push(logAVState(AV2));
     }
+
     if (role === "AV2") {
       logs.push(logEVState(EV));
       logs.push(logAVState(AV1));
     }
 
-    // emergency / lane_change 메시지
+    // emergency/lane_change
     const dynamicMsgs = [logEmergency(EV), logLaneChange(AV1), logLaneChange(AV2)].filter(Boolean);
 
     logs = [...dynamicMsgs, ...logs];
 
-    // -----------------------------------------------------
-    // ★ 변경됨: 로그를 한 줄씩 1초 간격으로 UI에 추가
-    // -----------------------------------------------------
-    logs
-      .map((msg) => msg && msg.trim())
-      .filter(Boolean)
-      .forEach((text, idx) => {
-        setTimeout(() => {
-          setMessages((prev) => [...prev, { text, isSinho: false }]);
-        }, idx * 1000); // 1줄씩 1초 간격 출력
-      });
+    setMessages((prev) => [...prev, ...logs.map((t) => ({ text: t, isSinho: false }))]);
   };
 
   // -----------------------------------------------------
@@ -114,7 +131,9 @@ const logLaneChange = (state) =>
     const { mainSocket, controlSocket } = createRealSocket((packet) => {
       console.log("[MAINPAGE PACKET RECEIVED]", packet);
 
-      // 자신의 상태 업데이트
+      // -----------------------------------
+      // 1) 실시간 자신의 상태 업데이트 (role 기반)
+      // -----------------------------------
       if (packet.type === role && packet.data) {
         setLiveState({
           speed: packet.data.speed ?? 0,
@@ -123,7 +142,9 @@ const logLaneChange = (state) =>
         });
       }
 
-      // 차량 위치 표시 업데이트
+      // -----------------------------------
+      // 2) 개별 차량 위치 업데이트 (EV, AV1, AV2)
+      // -----------------------------------
       if (["EV", "AV1", "AV2"].includes(packet.type)) {
         setItems((prevItems) =>
           prevItems.map((item) =>
@@ -138,7 +159,9 @@ const logLaneChange = (state) =>
         );
       }
 
-      // stage 로그
+      // -----------------------------------
+      // 3) STAGE 로그 출력
+      // -----------------------------------
       if (packet.type === "STAGE") {
         setMessages((prev) => [
           ...prev,
@@ -146,11 +169,17 @@ const logLaneChange = (state) =>
         ]);
       }
 
-      // STATUS_ALL 처리 (핵심)
+      // -----------------------------------
+      // 4) STATUS_ALL 처리 (핵심)
+      // -----------------------------------
       if (packet.type === "STATUS_ALL") {
-        handleStatusAll(packet.data);
+        const allStates = packet.data;
 
-        const myState = packet.data[role];
+        // 4-1) 자연어 로그 생성
+        handleStatusAll(allStates);
+
+        // 4-2) 자신의 실시간 박스 업데이트
+        const myState = allStates[role];
         if (myState) {
           setLiveState({
             speed: myState.speed ?? 0,
@@ -158,10 +187,26 @@ const logLaneChange = (state) =>
             position: myState.position ?? [0, 0],
           });
         }
-      }
-    }, role);
 
-    // CONTROL 시작 신호
+        // 4-3) 모든 차량 그리드 위치 업데이트
+        setItems((prevItems) =>
+          prevItems.map((item) => {
+            const state = allStates[item.name];
+            if (!state) return item;
+
+            return {
+              ...item,
+              row: state.position?.[0] ?? item.row,
+              col: state.position?.[1] ?? item.col,
+            };
+          })
+        );
+      }
+    });
+
+    // -----------------------------------
+    // CONTROL 역할일 때 시작 신호 전송
+    // -----------------------------------
     if (role === "CONTROL") {
       mainSocket.on("connect", () => {
         mainSocket.emit("control_start", {
@@ -203,10 +248,10 @@ const logLaneChange = (state) =>
             <div className="role-tab-wrapper-m">
               <button
                 className={`role-tab-m ${popup ? "active-m" : ""}`}
-                onClick={() => setPopup(!popup)}
-              >
+                onClick={() => setPopup(!popup)}>
                 Chat
               </button>
+
               <button className="role-tab-m" onClick={goToHomePage}>
                 Back Home →
               </button>
@@ -227,8 +272,7 @@ const logLaneChange = (state) =>
                       gridColumnStart: item.col + 1,
                       gridRowStart: item.row + 1,
                       backgroundColor: item.color,
-                    }}
-                  >
+                    }}>
                     {item.name}
                   </div>
                 ))}
@@ -237,13 +281,17 @@ const logLaneChange = (state) =>
                 <div className="col-border" style={{ gridColumn: "2 / 4" }} />
                 <div
                   className="col-border"
-                  style={{ gridColumn: "5 /7", borderLeft: "10px dashed #ffffff" }}
+                  style={{
+                    gridColumn: "5 / 7",
+                    borderLeft: "10px dashed #ffffff",
+                  }}
                 />
                 <div className="col-border" style={{ gridColumn: "8 / 10" }} />
               </div>
             </div>
           </div>
 
+          {/* CHAT POPUP */}
           {popup && (
             <div className="main-chat-frame">
               <div className="main-chat-popup-content">
@@ -277,7 +325,7 @@ const logLaneChange = (state) =>
                   </div>
                 )}
 
-                {/* 로그 박스 */}
+                {/* 로그 리스트 */}
                 <div className="main-chat-popup-body">
                   {messages.map((m, i) => (
                     <div key={i} className="main-chat-box box-dongjak">
@@ -285,12 +333,10 @@ const logLaneChange = (state) =>
                     </div>
                   ))}
                 </div>
-
               </div>
             </div>
           )}
         </div>
-
       </div>
     </div>
   );

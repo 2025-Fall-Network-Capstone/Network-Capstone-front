@@ -2,25 +2,55 @@
 
 import "../styles/mainPage.css";
 import "../styles/gridCar.css";
+
 import { useNavigate } from "react-router-dom";
 import { useContext, useState, useEffect } from "react";
 import { RoleContext } from "../context/RoleContext.jsx";
-
 import { createRealSocket } from "../utils/realSocket";
 
 function MainPage() {
   const { role } = useContext(RoleContext);
+
   const [popup, setPopup] = useState(true);
   const [messages, setMessages] = useState([]);
 
+  // 차량들의 현재 위치 UI 표시용
   const [items, setItems] = useState([
-    { id: 1, name: "CONTROL", row: 1, col: 0, color: "#6BA6A1", border: "0 3px solid #12543E" },
-    { id: 2, name: "AV1", row: 5, col: 3, color: "#9E94D1", border: "0 3px solid #3A2F71" },
-    { id: 3, name: "AV2", row: 5, col: 6, color: "#9E94D1", border: "0 3px solid #3A2F71" },
-    { id: 4, name: "EV", row: 6, col: 6, color: "#C18D94", border: "0 3px solid #751824" },
+    {
+      id: 1,
+      name: "CONTROL",
+      row: 1,
+      col: 0,
+      color: "#6BA6A1",
+      border: "0 3px solid #12543E",
+    },
+    {
+      id: 2,
+      name: "AV1",
+      row: 5,
+      col: 3,
+      color: "#9E94D1",
+      border: "0 3px solid #3A2F71",
+    },
+    {
+      id: 3,
+      name: "AV2",
+      row: 5,
+      col: 6,
+      color: "#9E94D1",
+      border: "0 3px solid #3A2F71",
+    },
+    {
+      id: 4,
+      name: "EV",
+      row: 6,
+      col: 6,
+      color: "#C18D94",
+      border: "0 3px solid #751824",
+    },
   ]);
 
-  // ⭐ 실시간 차량 상태 저장 ⭐
+  // 실시간 박스 (자기 자신의 상태만)
   const [liveState, setLiveState] = useState({
     speed: 0,
     direction: "",
@@ -30,102 +60,159 @@ function MainPage() {
   const navigate = useNavigate();
   const goToHomePage = () => navigate("/");
 
-  //------------------------------------------------------
-  // 역할별 필터링
-  //------------------------------------------------------
-  const shouldDisplay = (packet) => {
-    if (role === "EV") return packet.type === "EV" || packet.type === "CONTROL";
-    if (role === "AV1")
-      return packet.type === "AV1" || packet.type === "EV" || packet.type === "CONTROL";
-    if (role === "AV2")
-      return packet.type === "AV2" || packet.type === "EV" || packet.type === "CONTROL";
-    if (role === "CONTROL") return true;
-    return false;
+  // -----------------------------------------------------
+  // 자연어형 문장 생성 함수들(JSON 기반)
+  // -----------------------------------------------------
+  const fmtPosition = (pos) => `(${pos?.[0]}, ${pos?.[1]})`;
+
+  const logEVState = (state) =>
+    `EV 차량이 현재 ${state.speed}km/h 속도로 주행 중입니다. 방향은 ${
+      state.direction
+    }이며 위치는 ${fmtPosition(state.position)}입니다.`;
+
+  const logAVState = (state) =>
+    `${state.id} 차량이 현재 ${state.speed}km/h로 이동 중입니다. 방향은 ${
+      state.direction
+    }이며 위치는 ${fmtPosition(state.position)}입니다.`;
+
+  const logEmergency = (state) =>
+    state.emergency ? `EV 차량이 응급상황 신호를 전송했습니다.` : null;
+
+  const logLaneChange = (state) =>
+    state.lane_change ? `${state.id} 차량이 차선 변경을 수행 중입니다.` : null;
+
+  const logStageUpdate = (stage) => `관제가 단계 ${stage} 신호를 전송했습니다.`;
+
+  // -----------------------------------------------------
+  // 역할별 로그 생성
+  // -----------------------------------------------------
+  const handleStatusAll = (allStates) => {
+    let logs = [];
+
+    const EV = allStates.EV;
+    const AV1 = allStates.AV1;
+    const AV2 = allStates.AV2;
+
+    if (role === "CONTROL") {
+      logs.push(logEVState(EV));
+      logs.push(logAVState(AV1));
+      logs.push(logAVState(AV2));
+    }
+
+    if (role === "EV") {
+      logs.push(logAVState(AV1));
+      logs.push(logAVState(AV2));
+    }
+
+    if (role === "AV1") {
+      logs.push(logEVState(EV));
+      logs.push(logAVState(AV2));
+    }
+
+    if (role === "AV2") {
+      logs.push(logEVState(EV));
+      logs.push(logAVState(AV1));
+    }
+
+    // emergency/lane_change
+    const dynamicMsgs = [logEmergency(EV), logLaneChange(AV1), logLaneChange(AV2)].filter(Boolean);
+
+    logs = [...dynamicMsgs, ...logs];
+
+    setMessages((prev) => [...prev, ...logs.map((t) => ({ text: t, isSinho: false }))]);
   };
 
-  //------------------------------------------------------
-  // WebSocket 연결 (main + control)
-  //------------------------------------------------------
+  // -----------------------------------------------------
+  // WebSocket 연결
+  // -----------------------------------------------------
   useEffect(() => {
     if (!role) return;
 
     const { mainSocket, controlSocket } = createRealSocket((packet) => {
-      if (!shouldDisplay(packet)) return;
-
       console.log("[MAINPAGE PACKET RECEIVED]", packet);
 
-      // ⭐ 자신의 역할 데이터일 때만 실시간 상태 업데이트 ⭐
+      // -----------------------------------
+      // 1) 실시간 자신의 상태 업데이트 (role 기반)
+      // -----------------------------------
       if (packet.type === role && packet.data) {
         setLiveState({
           speed: packet.data.speed ?? 0,
-          direction: packet.data.direction ?? "",
+          direction: packet.data.direction ?? "__",
           position: packet.data.position ?? [0, 0],
         });
       }
 
-      // ⭐ stage 업데이트 로그 ⭐
-      let newMsg = [];
+      // -----------------------------------
+      // 2) 개별 차량 위치 업데이트 (EV, AV1, AV2)
+      // -----------------------------------
+      if (["EV", "AV1", "AV2"].includes(packet.type)) {
+        setItems((prevItems) =>
+          prevItems.map((item) =>
+            item.name === packet.type
+              ? {
+                  ...item,
+                  row: packet.data.position?.[0] ?? item.row,
+                  col: packet.data.position?.[1] ?? item.col,
+                }
+              : item
+          )
+        );
+      }
+
+      // -----------------------------------
+      // 3) STAGE 로그 출력
+      // -----------------------------------
       if (packet.type === "STAGE") {
-        newMsg = [{ text: `[Stage] ${packet.data.stage}`, isSinho: false }];
+        setMessages((prev) => [
+          ...prev,
+          { text: logStageUpdate(packet.data.stage), isSinho: false },
+        ]);
       }
 
-      // 차량 위치 업데이트
-      if (packet.type === "EV" || packet.type === "AV1" || packet.type === "AV2") {
-        if (packet.type === "EV") {
-          setItems((prevItems) =>
-            prevItems.map((item) =>
-              item.name === "EV"
-                ? {
-                    ...item,
-                    row: packet.data.position[0] ?? item.row,
-                    col: packet.data.position[1] ?? item.col,
-                  }
-                : item
-            )
-          );
+      // -----------------------------------
+      // 4) STATUS_ALL 처리 (핵심)
+      // -----------------------------------
+      if (packet.type === "STATUS_ALL") {
+        const allStates = packet.data;
+
+        // 4-1) 자연어 로그 생성
+        handleStatusAll(allStates);
+
+        // 4-2) 자신의 실시간 박스 업데이트
+        const myState = allStates[role];
+        if (myState) {
+          setLiveState({
+            speed: myState.speed ?? 0,
+            direction: myState.direction ?? "__",
+            position: myState.position ?? [0, 0],
+          });
         }
-        if (packet.type === "AV1") {
-          setItems((prevItems) =>
-            prevItems.map((item) =>
-              item.name === "AV1"
-                ? {
-                    ...item,
-                    row: packet.data.position[0] ?? item.row,
-                    col: packet.data.position[1] ?? item.col,
-                  }
-                : item
-            )
-          );
-        }
-        if (packet.type === "AV2") {
-          setItems((prevItems) =>
-            prevItems.map((item) =>
-              item.name === "AV2"
-                ? {
-                    ...item,
-                    row: packet.data.position[0] ?? item.row,
-                    col: packet.data.position[1] ?? item.col,
-                  }
-                : item
-            )
-          );
-        }
+
+        // 4-3) 모든 차량 그리드 위치 업데이트
+        setItems((prevItems) =>
+          prevItems.map((item) => {
+            const state = allStates[item.name];
+            if (!state) return item;
+
+            return {
+              ...item,
+              row: state.position?.[0] ?? item.row,
+              col: state.position?.[1] ?? item.col,
+            };
+          })
+        );
       }
+    });
 
-      setMessages((prev) => [...prev, ...newMsg]);
-    }, role);
-
-    // CONTROL → 시작 신호 emit
+    // -----------------------------------
+    // CONTROL 역할일 때 시작 신호 전송
+    // -----------------------------------
     if (role === "CONTROL") {
       mainSocket.on("connect", () => {
-        console.log("[CONTROL SOCKET CONNECTED]");
-
         mainSocket.emit("control_start", {
           role: "CONTROL",
           timestamp: Date.now(),
         });
-
-        console.log("[SOCKET EMIT] control_start 전송 완료");
       });
     }
 
@@ -135,9 +222,9 @@ function MainPage() {
     };
   }, [role]);
 
-  //------------------------------------------------------
+  // -----------------------------------------------------
   // UI Rendering
-  //------------------------------------------------------
+  // -----------------------------------------------------
   return (
     <div className="main-page-root">
       <div className="main-content">
@@ -164,6 +251,7 @@ function MainPage() {
                 onClick={() => setPopup(!popup)}>
                 Chat
               </button>
+
               <button className="role-tab-m" onClick={goToHomePage}>
                 Back Home →
               </button>
@@ -184,7 +272,6 @@ function MainPage() {
                       gridColumnStart: item.col + 1,
                       gridRowStart: item.row + 1,
                       backgroundColor: item.color,
-                      borderColor: item.bordercolor,
                     }}>
                     {item.name}
                   </div>
@@ -194,58 +281,54 @@ function MainPage() {
                 <div className="col-border" style={{ gridColumn: "2 / 4" }} />
                 <div
                   className="col-border"
-                  style={{ gridColumn: "5 / 7", borderLeft: "10px dashed #ffffff" }}
+                  style={{
+                    gridColumn: "5 / 7",
+                    borderLeft: "10px dashed #ffffff",
+                  }}
                 />
                 <div className="col-border" style={{ gridColumn: "8 / 10" }} />
               </div>
             </div>
           </div>
 
+          {/* CHAT POPUP */}
           {popup && (
             <div className="main-chat-frame">
               <div className="main-chat-popup-content">
                 <div className="main-chat-popup-header">
                   <div className="main-chat-title">통신 로그</div>
-                  <div className="main-chat-popup-header-right">
-                    <span className="right-box sinho">&nbsp;</span>
-                    <span className="right-text">동작</span>
-                    <span className="right-box dongjaK">&nbsp;</span>
-                    <span className="right-text">신호</span>
-                  </div>
                 </div>
 
-                <div className="main-chat-popup-body">
-                  {/* 실시간 동작 값 표시 */}
-                  {role !== "CONTROL" && (
-                    <div className="main-chat-realtime-content">
-                      <div className="realtime-title">실시간 동작 확인</div>
+                {/* 실시간 박스 */}
+                {role !== "CONTROL" && (
+                  <div className="main-chat-realtime-content">
+                    <div className="realtime-title">실시간 동작 확인</div>
 
-                      <div className="realtime-box-frame">
-                        <div className="realtime-box">
-                          <div className="realtime-box-sub-tittle">주행 속도</div>
-                          <div className="realtime-box-text">{liveState.speed} km/h</div>
-                        </div>
+                    <div className="realtime-box-frame">
+                      <div className="realtime-box">
+                        <div className="realtime-box-sub-tittle">주행 속도</div>
+                        <div className="realtime-box-text">{liveState.speed} km/h</div>
+                      </div>
 
-                        <div className="realtime-box">
-                          <div className="realtime-box-sub-tittle">주행 방향</div>
-                          <div className="realtime-box-text">{liveState.direction}</div>
-                        </div>
+                      <div className="realtime-box">
+                        <div className="realtime-box-sub-tittle">주행 방향</div>
+                        <div className="realtime-box-text">{liveState.direction}</div>
+                      </div>
 
-                        <div className="realtime-box">
-                          <div className="realtime-box-sub-tittle">현재 위치</div>
-                          <div className="realtime-box-text">
-                            ({liveState.position[0]} , {liveState.position[1]})
-                          </div>
+                      <div className="realtime-box">
+                        <div className="realtime-box-sub-tittle">현재 위치</div>
+                        <div className="realtime-box-text">
+                          ({liveState.position[0]}, {liveState.position[1]})
                         </div>
                       </div>
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {/* 로그 박스 */}
+                {/* 로그 리스트 */}
+                <div className="main-chat-popup-body">
                   {messages.map((m, i) => (
-                    <div
-                      key={i}
-                      className={`main-chat-box ${m.isSinho ? "box-sinho" : "box-dongjak"}`}>
+                    <div key={i} className="main-chat-box box-dongjak">
                       {m.text}
                     </div>
                   ))}
