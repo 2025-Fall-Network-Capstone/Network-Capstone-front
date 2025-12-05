@@ -2,8 +2,8 @@
 import { io } from "socket.io-client";
 
 export function createRealSocket(onMessage, role) {
-  const socket = io("http://192.168.0.92:5003", {
-    transports: ["websocket"]
+  const socket = io("http://192.168.0.119:5003", {
+    transports: ["websocket"],
   });
 
   // --- 연결 ---
@@ -39,8 +39,8 @@ export function createRealSocket(onMessage, role) {
     console.log(`[REAL SOCKET] ${id} STATE:`, state);
 
     onMessage({
-      type: id,   // "EV" / "AV1" / "AV2"
-      data: state
+      type: id, // "EV" / "AV1" / "AV2"
+      data: state,
     });
   });
 
@@ -55,7 +55,7 @@ export function createRealSocket(onMessage, role) {
     Object.keys(allState).forEach((key) => {
       onMessage({
         type: key,
-        data: allState[key]
+        data: allState[key],
       });
     });
   });
@@ -68,7 +68,7 @@ export function createRealSocket(onMessage, role) {
 
     onMessage({
       type: "STAGE",
-      data: packet
+      data: packet,
     });
   });
 

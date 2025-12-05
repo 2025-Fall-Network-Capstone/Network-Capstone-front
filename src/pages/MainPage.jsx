@@ -212,28 +212,30 @@ function MainPage() {
 
                 <div className="main-chat-popup-body">
                   {/* 실시간 동작 값 표시 */}
-                  <div className="main-chat-realtime-content">
-                    <div className="realtime-title">실시간 동작 확인</div>
+                  {role != "CONTROL" && (
+                    <div className="main-chat-realtime-content">
+                      <div className="realtime-title">실시간 동작 확인</div>
 
-                    <div className="realtime-box-frame">
-                      <div className="realtime-box">
-                        <div className="realtime-box-sub-tittle">주행 속도</div>
-                        <div className="realtime-box-text">{liveState.speed} km/h</div>
-                      </div>
+                      <div className="realtime-box-frame">
+                        <div className="realtime-box">
+                          <div className="realtime-box-sub-tittle">주행 속도</div>
+                          <div className="realtime-box-text">{liveState.speed} km/h</div>
+                        </div>
 
-                      <div className="realtime-box">
-                        <div className="realtime-box-sub-tittle">주행 방향</div>
-                        <div className="realtime-box-text">{liveState.direction}</div>
-                      </div>
+                        <div className="realtime-box">
+                          <div className="realtime-box-sub-tittle">주행 방향</div>
+                          <div className="realtime-box-text">{liveState.direction}</div>
+                        </div>
 
-                      <div className="realtime-box">
-                        <div className="realtime-box-sub-tittle">현재 위치</div>
-                        <div className="realtime-box-text">
-                          ({liveState.position[0]} , {liveState.position[1]})
+                        <div className="realtime-box">
+                          <div className="realtime-box-sub-tittle">현재 위치</div>
+                          <div className="realtime-box-text">
+                            ({liveState.position[0]} , {liveState.position[1]})
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* 로그 박스 */}
                   {messages.map((m, i) => (
