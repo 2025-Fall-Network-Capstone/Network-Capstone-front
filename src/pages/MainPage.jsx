@@ -11,18 +11,23 @@ function MainPage() {
   const { role } = useContext(RoleContext);
   const [popup, setPopup] = useState(true);
 
+  // 실제 출력되는 메시지 리스트
   const [messages, setMessages] = useState([]);
+
+  // 1초마다 한 줄씩 내보내기 위한 메시지 큐
   const [logQueue, setLogQueue] = useState([]);
 
-  // Stage 3 타이머
+  // 3단계 5초 후 다른 메시지 출력용 타이머
   const stage3TimerRef = useRef(null);
 
+  // 방향 맵
   const dirMap = {
     straight: "직진",
     left_turn: "좌회전",
     right_turn: "우회전",
   };
 
+  // 차량 위치 UI용
   const initialItems = [
     {
       id: 1,
@@ -68,22 +73,36 @@ function MainPage() {
 
   const [items, setItems] = useState(initialItems);
 
+  // 🔥 role에 해당하는 초기 상태 반환 함수
   function getInitialLiveState(role) {
     const item = initialItems.find((v) => v.name === role);
-    if (!item) return { speed: 0, direction: "", position: [0, 0] };
+
+    if (!item) {
+      return {
+        speed: 0,
+        direction: "",
+        position: [0, 0],
+      };
+    }
+
     return {
       speed: item.speed,
       direction: item.direction,
-      position: [item.row, item.col],
+      position: [item.row, item.col], // 초기 row/col 기반
     };
   }
 
+  // Live State (자기 자신의 상태만)
   const [liveState, setLiveState] = useState(() => getInitialLiveState(role));
+
   const [stage5Logged, setStage5Logged] = useState(false);
   const [globalStage, setGlobalStage] = useState(null);
-
   const navigate = useNavigate();
   const goToHomePage = () => navigate("/");
+
+  // -----------------------------------------------------
+  // 자연어형 로그 생성 함수들
+  // -----------------------------------------------------
 
   const fmtPosition = (pos) => `(${pos?.[0]}, ${pos?.[1]})`;
 
@@ -105,6 +124,10 @@ function MainPage() {
 
   const logStageUpdate = (stage) => `관제가 Stage ${stage}로 변경했습니다.`;
 
+  // -----------------------------------------------------
+  // STATUS_ALL 로그 처리 → queue에 넣기
+  // -----------------------------------------------------
+
   const handleStatusAll = (allStates) => {
     let logs = [];
 
@@ -112,17 +135,20 @@ function MainPage() {
     const AV1 = allStates.AV1;
     const AV2 = allStates.AV2;
 
+    // CONTROL → 모든 차량 상태 출력
     if (role === "CONTROL") {
       logs.push(logEVState(EV));
       logs.push(logAVState(AV1));
       logs.push(logAVState(AV2));
     }
 
+    // EV → 다른 차량 상태만 출력
     if (role === "EV") {
       logs.push(logAVState(AV1));
       logs.push(logAVState(AV2));
     }
 
+    // AV → 자기 제외, EV + 상대 AV 출력
     if (role === "AV1") {
       logs.push(logEVState(EV));
       logs.push(logAVState(AV2));
@@ -132,19 +158,27 @@ function MainPage() {
       logs.push(logAVState(AV1));
     }
 
+    // emergency / lane_change 메시지 추가
     const dynamicMsgs = [logEmergency(EV), logLaneChange(AV1), logLaneChange(AV2)].filter(Boolean);
 
     logs = [...dynamicMsgs, ...logs];
+
+    // ---- 기존: 즉시 출력하던 부분 수정 ----
+    // setMessages(...) 삭제하고 queue에 넣기
     setLogQueue((prev) => [...prev, ...logs]);
   };
 
-  // 메시지 큐 → 1초 간격으로 출력
+  // -----------------------------------------------------
+  // 메시지 큐 관리: 1초마다 queue에서 하나씩 꺼내 messages로 이동
+  // -----------------------------------------------------
+
   useEffect(() => {
     if (logQueue.length === 0) return;
 
     const timer = setInterval(() => {
       setLogQueue((prevQueue) => {
         if (prevQueue.length === 0) return [];
+
         const [nextLog, ...rest] = prevQueue;
 
         setMessages((prev) => [...prev, { text: nextLog, isSinho: false }]);
@@ -157,28 +191,7 @@ function MainPage() {
   }, [logQueue]);
 
   // -----------------------------------------------------
-  // 🔥 FIX: Stage에 반응하는 타이머 전용 useEffect
-  // -----------------------------------------------------
-  useEffect(() => {
-    if (globalStage === 3) {
-      if (!stage3TimerRef.current) {
-        stage3TimerRef.current = setTimeout(() => {
-          setItems((prev) => prev.map((v) => (v.name === "EV" ? { ...v, row: 1, col: 6 } : v)));
-        }, 5000);
-      }
-    }
-
-    // Stage 4 이상 → 타이머 정리
-    if (globalStage > 3) {
-      if (stage3TimerRef.current) {
-        clearTimeout(stage3TimerRef.current);
-        stage3TimerRef.current = null;
-      }
-    }
-  }, [globalStage]); // 🔥 FIX 핵심
-
-  // -----------------------------------------------------
-  // WebSocket
+  // WebSocket 연결
   // -----------------------------------------------------
   useEffect(() => {
     if (!role) return;
@@ -186,6 +199,7 @@ function MainPage() {
     const { mainSocket, controlSocket } = createRealSocket((packet) => {
       console.log("[MAINPAGE PACKET RECEIVED]", packet);
 
+      // LiveState 업데이트 (내 차량)
       if (packet.type === role && packet.data) {
         setLiveState({
           speed: packet.data.speed ?? 0,
@@ -193,12 +207,14 @@ function MainPage() {
           position: packet.data.position ?? [0, 0],
         });
 
+        // 🔥 SELF STATE에서도 stage 5 감지
         if (packet.data.stage === 5 && !stage5Logged) {
           setStage5Logged(true);
           setLogQueue((prev) => [...prev, "EV가 반경 2km를 벗어났습니다."]);
         }
       }
 
+      // 차량 위치 업데이트 (EV/AV 전용)
       if (["EV", "AV1", "AV2"].includes(packet.type)) {
         setItems((prevItems) =>
           prevItems.map((item) =>
@@ -214,6 +230,7 @@ function MainPage() {
       }
 
       if (packet.type === "STAGE") {
+        // 🔥 Stage 값 프론트에 저장 (CONTROL이 시나리오 기준이 됨)
         setGlobalStage(packet.data.stage);
 
         if (role === "CONTROL") {
@@ -221,18 +238,24 @@ function MainPage() {
         }
       }
 
+      // STATUS_ALL 처리
       if (packet.type === "STATUS_ALL") {
         const allStates = packet.data;
+        const currentStage = globalStage;
 
-        // Stage 5 메시지
-        if (globalStage === 5) {
+        if (currentStage === 5) {
           setLogQueue((prev) => [...prev, "EV가 반경 2km를 벗어났습니다."]);
         }
 
+        // 4-1) 자연어 로그 생성
         handleStatusAll(allStates);
 
+        // 4-2) 자신의 실시간 박스 업데이트
         const myState = allStates[role];
+        // const init = initialItems.find((item) => item.name === role);
+
         if (myState) {
+          // 🔥 role에 맞는 초기값 찾기
           const init = initialItems.find((item) => item.name === role);
 
           setLiveState({
@@ -242,6 +265,7 @@ function MainPage() {
           });
         }
 
+        // 4-3) 모든 차량 그리드 위치 업데이트
         setItems((prevItems) =>
           prevItems.map((item) => {
             const state = allStates[item.name];
@@ -250,7 +274,49 @@ function MainPage() {
             const originalRow = state.position?.[0] ?? item.row;
             const originalCol = state.position?.[1] ?? item.col;
 
-            // 🔥 기존 Stage3 타이머는 그대로 두되 비활성화됨 (useEffect로 이동)
+            // ---------------------- 🔥 Stage 3 예외 처리 ----------------------
+            if (currentStage === 3) {
+              // 처음에는 서버 state 그대로 반영
+              const updatedItem = {
+                ...item,
+                row: originalRow,
+                col: originalCol,
+              };
+
+              // -------------------------------
+              // 2) Stage 3 타이머 (단 한 번만!)
+              // -------------------------------
+              if (currentStage === 3) {
+                if (!stage3TimerRef.current) {
+                  stage3TimerRef.current = setTimeout(() => {
+                    setItems((prev) =>
+                      prev.map((v) => (v.name === "EV" ? { ...v, row: 1, col: 6 } : v))
+                    );
+                  }, 5000);
+                }
+              }
+
+              return updatedItem;
+            }
+
+            // -------------------------------
+            // 3) Stage 4부터 타이머 정리
+            // -------------------------------
+            if (currentStage > 3) {
+              if (stage3TimerRef.current) {
+                clearTimeout(stage3TimerRef.current);
+                stage3TimerRef.current = null;
+              }
+
+              return {
+                ...item,
+                row: originalRow,
+                col: originalCol,
+              };
+            }
+            // -----------------------------------------------------------------
+
+            // 기본 상태 업데이트
             return {
               ...item,
               row: originalRow,
@@ -274,7 +340,7 @@ function MainPage() {
       mainSocket.disconnect();
       controlSocket.disconnect();
     };
-  }, [role, globalStage]);
+  }, [role]);
 
   // -----------------------------------------------------
   // UI Rendering
@@ -330,6 +396,7 @@ function MainPage() {
                   </div>
                 ))}
 
+                {/* 도로 중앙선 */}
                 <div className="col-border" style={{ gridColumn: "2 / 4" }} />
                 <div
                   className="col-border"
@@ -347,6 +414,7 @@ function MainPage() {
                   <div className="main-chat-title">통신 로그</div>
                 </div>
 
+                {/* 실시간 박스 (CONTROL 제외) */}
                 {role !== "CONTROL" && (
                   <div className="main-chat-realtime-content">
                     <div className="realtime-title">실시간 동작 확인</div>
