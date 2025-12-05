@@ -44,12 +44,12 @@ export function createRealSocket(onMessage, role) {
   });
 
   //------------------------------------------------------
-  // 1) vehicle_update
+  // 1) vehicle_state
   //------------------------------------------------------
-  socket.on("vehicle_update", (packet) => {
+  socket.on("vehicle_state", (packet) => {
     const { id, state } = packet;
 
-    debugLog(id, "vehicle_update 수신");
+    debugLog(id, "vehicle_state 수신");
 
     console.log(`[REAL SOCKET] ${id} STATE:`, state);
 
