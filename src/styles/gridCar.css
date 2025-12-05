@@ -56,3 +56,17 @@
   z-index: 5;
   align-self: stretch;
 }
+
+@keyframes blink-effect {
+  0%,
+  100% {
+    filter: brightness(1.25);
+  }
+  50% {
+    filter: brightness(1.1);
+  }
+}
+
+.blink {
+  animation: blink-effect 1.5s step-end infinite;
+}

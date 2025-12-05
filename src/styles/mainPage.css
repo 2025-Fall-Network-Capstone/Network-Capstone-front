@@ -316,6 +316,7 @@ body {
 
 .realtime-box-sub-tittle {
   display: flex;
+  margin-top: 15px;
   height: 35px;
   flex-direction: column;
   justify-content: flex-end;
