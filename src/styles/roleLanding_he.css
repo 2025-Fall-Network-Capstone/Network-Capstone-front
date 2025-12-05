@@ -39,6 +39,7 @@
   --wine-hover: #062c1f;
   --wine-hover-2: rgba(207, 228, 222, 0.3);
   --wine-hover-3: rgba(176, 211, 201, 0.6);
+  --wine-insert-shadow: rgba(18, 84, 62, 0.1);
   --wine-background: rgba(241, 247, 246, 1);
   --wine-sub-title: rgba(18, 84, 62, 0.6);
 }
@@ -49,6 +50,7 @@
   --wine-hover: #170d49;
   --wine-hover-2: rgba(80, 63, 168, 0.1);
   --wine-hover-3: rgba(80, 63, 168, 0.2);
+  --wine-insert-shadow: rgba(58, 47, 113, 0.1);
   --wine-background: rgba(80, 63, 168, 0.1);
   --wine-sub-title: rgba(58, 47, 113, 0.8);
 }

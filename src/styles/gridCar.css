@@ -1,0 +1,58 @@
+.car-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  height: 100%;
+  background-color: #404040;
+}
+
+.car-grid-frames {
+  display: grid;
+  position: relative;
+  align-items: center;
+  justify-items: center;
+  box-sizing: border-box;
+
+  grid-template-rows: repeat(7, 1fr);
+  grid-template-columns: repeat(10, 80px);
+
+  width: 100%;
+  height: 100%;
+  position: relative; /* 자식 요소들이 이 안에서 놀도록 */
+
+  padding-left: 100px;
+  padding-right: 100px;
+}
+
+/* 움직이는 아이템 스타일 */
+.grid-item {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 0 3px solid white;
+  border-radius: 100px;
+  font-weight: bold;
+  color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+  /* 부드러운 이동을 위한 트랜지션 */
+  transition: all 0.3s ease-in-out;
+
+  /* 중요: 아이템이 셀을 꽉 채우도록 설정 */
+  width: 80%;
+  aspect-ratio: 1/1;
+
+  /* 아이템이 겹칠 경우 순서를 정해줌 (필요시) */
+  z-index: 10;
+}
+
+.car-grid-frames .col-border {
+  grid-row: 1 / -1; /* 전체 행을 덮어서 세로선이 위에서 아래까지 이어지게 */
+  width: 0; /* 실제 너비는 border로 만듦 */
+  border-left: 10px solid #fafa76;
+  pointer-events: none;
+  z-index: 5;
+  align-self: stretch;
+}

@@ -8,12 +8,12 @@ export function RoleProvider({ children }) {
 
   // 역할이 바뀌면 HTML 루트에 클래스 적용
   useEffect(() => {
+    if (role == "AV1" || role == "AV2" || role == "AV") {
+      document.documentElement.className = `av-theme`;
+      return;
+    }
     document.documentElement.className = `${role.toLowerCase()}-theme`;
   }, [role]);
 
-  return (
-    <RoleContext.Provider value={{ role, setRole }}>
-      {children}
-    </RoleContext.Provider>
-  );
+  return <RoleContext.Provider value={{ role, setRole }}>{children}</RoleContext.Provider>;
 }

@@ -53,7 +53,7 @@ function RoleLandingPage() {
 
               {/* DESCRIPTION */}
               <p className="landing-desc-h">
-                EV인 경우 대시보드를 표시합니다. 무엇을 입력해야 할지는 잘 모르겠지만 대략 두 줄
+                {role}인 경우 대시보드를 표시합니다. 무엇을 입력해야 할지는 잘 모르겠지만 대략 두 줄
                 정도면 충분할 것 같습니다. 그래서 내용을 채워넣는 부분입니다.
               </p>
             </div>
