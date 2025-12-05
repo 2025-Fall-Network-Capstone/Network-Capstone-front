@@ -3,10 +3,10 @@ import { io } from "socket.io-client";
 
 export function createRealSocket(onMessage, role) {
   const SERVER_MAP = {
-    EV: "http://192.168.0.34:5000",
-    AV1: "http://192.168.0.118:5001",
-    AV2: "http://192.168.0.7:5002",
-    CONTROL: "http://192.168.0.119:5003",
+    EV: "http://172.20.62.16:5000",
+    AV1: "http://172.20.57.184:5001",
+    AV2: "http://172.20.93.219:5002",
+    CONTROL: "http://172.20.96.208:5003",
   };
 
   const myServer = SERVER_MAP[role];
@@ -29,7 +29,7 @@ export function createRealSocket(onMessage, role) {
   //------------------------------------------------------
   // ⭐ controlSocket: Control Tower(5003)와 연결
   //------------------------------------------------------
-  const controlSocket = io("http://192.168.0.119:5003", {
+  const controlSocket = io("http://172.20.96.208:5003", {
     transports: ["websocket"],
   });
 
