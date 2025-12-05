@@ -37,23 +37,22 @@ function MainPage() {
   const fmtPosition = (pos) => `(${pos?.[0]}, ${pos?.[1]})`;
 
   const logEVState = (state) =>
-    `EV 차량이 현재 ${state.speed}km/h 속도로 주행 중입니다. 방향은 ${state.direction}이며 위치는 ${fmtPosition(state.position)}입니다.`;
+    `EV 차량이 현재 ${state.speed}km/h 속도로 주행 중입니다. 방향은 ${
+      state.direction
+    }이며 위치는 ${fmtPosition(state.position)}입니다.`;
 
   const logAVState = (state) =>
-    `${state.id} 차량이 현재 ${state.speed}km/h로 이동 중입니다. 방향은 ${state.direction}이며 위치는 ${fmtPosition(state.position)}입니다.`;
+    `${state.id} 차량이 현재 ${state.speed}km/h로 이동 중입니다. 방향은 ${
+      state.direction
+    }이며 위치는 ${fmtPosition(state.position)}입니다.`;
 
   const logEmergency = (state) =>
-    state.emergency
-      ? `EV 차량이 응급상황 신호를 전송했습니다.`
-      : null;
+    state.emergency ? `EV 차량이 응급상황 신호를 전송했습니다.` : null;
 
   const logLaneChange = (state) =>
-    state.lane_change
-      ? `${state.id} 차량이 차선 변경을 수행 중입니다.`
-      : null;
+    state.lane_change ? `${state.id} 차량이 차선 변경을 수행 중입니다.` : null;
 
-  const logStageUpdate = (stage) =>
-    `관제가 단계 ${stage} 신호를 전송했습니다.`;
+  const logStageUpdate = (stage) => `관제가 단계 ${stage} 신호를 전송했습니다.`;
 
   // -----------------------------------------------------
   // 역할별로 어떤 로그를 출력할지 결정하는 함수
@@ -96,19 +95,12 @@ function MainPage() {
     }
 
     // emergency / lane_change 기반 메시지 추가
-    const dynamicMsgs = [
-      logEmergency(EV),
-      logLaneChange(AV1),
-      logLaneChange(AV2),
-    ].filter(Boolean);
+    const dynamicMsgs = [logEmergency(EV), logLaneChange(AV1), logLaneChange(AV2)].filter(Boolean);
 
     logs = [...dynamicMsgs, ...logs];
 
     // 메시지 저장
-    setMessages((prev) => [
-      ...prev,
-      ...logs.map((t) => ({ text: t, isSinho: false })),
-    ]);
+    setMessages((prev) => [...prev, ...logs.map((t) => ({ text: t, isSinho: false }))]);
   };
 
   // -----------------------------------------------------
@@ -118,7 +110,6 @@ function MainPage() {
     if (!role) return;
 
     const { mainSocket, controlSocket } = createRealSocket((packet) => {
-
       console.log("[MAINPAGE PACKET RECEIVED]", packet);
 
       // -----------------------------------
@@ -127,7 +118,7 @@ function MainPage() {
       if (packet.type === role && packet.data) {
         setLiveState({
           speed: packet.data.speed ?? 0,
-          direction: packet.data.direction ?? "",
+          direction: packet.data.direction ?? "__",
           position: packet.data.position ?? [0, 0],
         });
       }
@@ -164,8 +155,17 @@ function MainPage() {
       // -----------------------------------
       if (packet.type === "STATUS_ALL") {
         handleStatusAll(packet.data);
-      }
 
+        // ⭐⭐ 추가된 부분: status_all로도 실시간 박스 업데이트
+        const myState = packet.data[role];
+        if (myState) {
+          setLiveState({
+            speed: myState.speed ?? 0,
+            direction: myState.direction ?? "__",
+            position: myState.position ?? [0, 0],
+          });
+        }
+      }
     }, role);
 
     // CONTROL 시작 신호
@@ -190,7 +190,6 @@ function MainPage() {
   return (
     <div className="main-page-root">
       <div className="main-content">
-        
         {/* HEADER */}
         <div className="main-header-section">
           <header className="nav-bar-m">
@@ -211,8 +210,7 @@ function MainPage() {
             <div className="role-tab-wrapper-m">
               <button
                 className={`role-tab-m ${popup ? "active-m" : ""}`}
-                onClick={() => setPopup(!popup)}
-              >
+                onClick={() => setPopup(!popup)}>
                 Chat
               </button>
               <button className="role-tab-m" onClick={goToHomePage}>
@@ -235,8 +233,7 @@ function MainPage() {
                       gridColumnStart: item.col + 1,
                       gridRowStart: item.row + 1,
                       backgroundColor: item.color,
-                    }}
-                  >
+                    }}>
                     {item.name}
                   </div>
                 ))}
@@ -258,49 +255,43 @@ function MainPage() {
                 <div className="main-chat-popup-header">
                   <div className="main-chat-title">통신 로그</div>
                 </div>
+                {/* 실시간 박스 */}
+                {role !== "CONTROL" && (
+                  <div className="main-chat-realtime-content">
+                    <div className="realtime-title">실시간 동작 확인</div>
 
-                <div className="main-chat-popup-body">
-                  
-                  {/* 실시간 박스 */}
-                  {role !== "CONTROL" && (
-                    <div className="main-chat-realtime-content">
-                      <div className="realtime-title">실시간 동작 확인</div>
+                    <div className="realtime-box-frame">
+                      <div className="realtime-box">
+                        <div className="realtime-box-sub-tittle">주행 속도</div>
+                        <div className="realtime-box-text">{liveState.speed} km/h</div>
+                      </div>
 
-                      <div className="realtime-box-frame">
-                        <div className="realtime-box">
-                          <div className="realtime-box-sub-tittle">주행 속도</div>
-                          <div className="realtime-box-text">
-                            {liveState.speed} km/h
-                          </div>
-                        </div>
+                      <div className="realtime-box">
+                        <div className="realtime-box-sub-tittle">주행 방향</div>
+                        <div className="realtime-box-text">{liveState.direction}</div>
+                      </div>
 
-                        <div className="realtime-box">
-                          <div className="realtime-box-sub-tittle">주행 방향</div>
-                          <div className="realtime-box-text">{liveState.direction}</div>
-                        </div>
-
-                        <div className="realtime-box">
-                          <div className="realtime-box-sub-tittle">현재 위치</div>
-                          <div className="realtime-box-text">
-                            ({liveState.position[0]}, {liveState.position[1]})
-                          </div>
+                      <div className="realtime-box">
+                        <div className="realtime-box-sub-tittle">현재 위치</div>
+                        <div className="realtime-box-text">
+                          ({liveState.position[0]}, {liveState.position[1]})
                         </div>
                       </div>
                     </div>
-                  )}
+                  </div>
+                )}
 
+                <div className="main-chat-popup-body">
                   {/* 로그 리스트 */}
                   {messages.map((m, i) => (
-                    <div key={i} className={`main-chat-box`}>
+                    <div key={i} className={`main-chat-box box-dongjak`}>
                       {m.text}
                     </div>
                   ))}
-
                 </div>
               </div>
             </div>
           )}
-
         </div>
       </div>
     </div>
