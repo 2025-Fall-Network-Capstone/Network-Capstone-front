@@ -34,19 +34,23 @@ function MainPage() {
   // 자연어형 문장 생성 함수들(JSON 기반)
   // -----------------------------------------------------
 
-  const fmtPosition = (pos) => `(${pos?.[0]}, ${pos?.[1]})`;
+  // -----------------------------------------------------
+// 자연어형 문장 생성 함수들(말투 수정됨)
+// -----------------------------------------------------
 
-  const logEVState = (state) =>
-    `EV가 현재 시속 ${state.speed}km/h로 이동 중입니다. 방향은 ${state.direction}, 위치는 ${fmtPosition(state.position)}입니다.`;
+const fmtPosition = (pos) => `(${pos?.[0]}, ${pos?.[1]})`;
 
-  const logAVState = (state) =>
-    `${state.id}가 시속 ${state.speed}km/h로 주행하고 있습니다. 방향은 ${state.direction}, 위치는 ${fmtPosition(state.position)}입니다.`;
+const logEVState = (state) =>
+  `EV가 현재 시속 ${state.speed}km/h로 이동 중입니다. 방향은 ${state.direction}, 위치는 ${fmtPosition(state.position)}입니다.`;
 
-  const logEmergency = (state) =>
-    state.emergency ? `EV가 응급상황을 주변 차량에 전달했습니다.` : null;
+const logAVState = (state) =>
+  `${state.id}가 시속 ${state.speed}km/h로 주행하고 있습니다. 방향은 ${state.direction}, 위치는 ${fmtPosition(state.position)}입니다.`;
 
-  const logLaneChange = (state) =>
-    state.lane_change ? `${state.id}가 차선 변경을 수행 중입니다.` : null;
+const logEmergency = (state) =>
+  state.emergency ? `EV가 응급상황을 주변 차량에 전달했습니다.` : null;
+
+const logLaneChange = (state) =>
+  state.lane_change ? `${state.id}가 차선 변경을 수행 중입니다.` : null;
 
 
   // -----------------------------------------------------
