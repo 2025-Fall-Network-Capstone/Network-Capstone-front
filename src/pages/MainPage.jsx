@@ -2,7 +2,6 @@
 
 import "../styles/mainPage.css";
 import "../styles/gridCar.css";
-// import mapImage from "../assets/map-background.jpg";
 import { useNavigate } from "react-router-dom";
 import { useContext, useState, useEffect } from "react";
 import { RoleContext } from "../context/RoleContext.jsx";
@@ -13,6 +12,7 @@ function MainPage() {
   const { role } = useContext(RoleContext);
   const [popup, setPopup] = useState(true);
   const [messages, setMessages] = useState([]);
+
   const [items, setItems] = useState([
     { id: 1, name: "CONTROL", row: 1, col: 0, color: "#6BA6A1", border: "0 3px solid #12543E" },
     { id: 2, name: "AV1", row: 5, col: 3, color: "#9E94D1", border: "0 3px solid #3A2F71" },
@@ -44,12 +44,12 @@ function MainPage() {
   };
 
   //------------------------------------------------------
-  // WebSocket 연결
+  // WebSocket 연결 (main + control)
   //------------------------------------------------------
   useEffect(() => {
     if (!role) return;
 
-    const socket = createRealSocket((packet) => {
+    const { mainSocket, controlSocket } = createRealSocket((packet) => {
       if (!shouldDisplay(packet)) return;
 
       console.log("[MAINPAGE PACKET RECEIVED]", packet);
@@ -63,52 +63,25 @@ function MainPage() {
         });
       }
 
-      // ⭐ 로그는 기존 방식 유지 ⭐
+      // ⭐ stage 업데이트 로그 ⭐
       let newMsg = [];
       if (packet.type === "STAGE") {
         newMsg = [{ text: `[Stage] ${packet.data.stage}`, isSinho: false }];
       }
 
+      // 차량 위치 업데이트
       if (packet.type === "EV" || packet.type === "AV1" || packet.type === "AV2") {
-        if (packet.type === "EV") {
-          setItems((prevItems) =>
-            prevItems.map((item) =>
-              item.name === "EV"
-                ? {
-                    ...item,
-                    row: packet.data.positionRow ?? item.row,
-                    col: packet.data.positionCol ?? item.col,
-                  }
-                : item
-            )
-          );
-        }
-        if (packet.type === "AV1") {
-          setItems((prevItems) =>
-            prevItems.map((item) =>
-              item.name === "AV1"
-                ? {
-                    ...item,
-                    row: packet.data.positionRow ?? item.row,
-                    col: packet.data.positionCol ?? item.col,
-                  }
-                : item
-            )
-          );
-        }
-        if (packet.type === "AV2") {
-          setItems((prevItems) =>
-            prevItems.map((item) =>
-              item.name === "AV2"
-                ? {
-                    ...item,
-                    row: packet.data.positionRow ?? item.row,
-                    col: packet.data.positionCol ?? item.col,
-                  }
-                : item
-            )
-          );
-        }
+        setItems((prevItems) =>
+          prevItems.map((item) =>
+            item.name === packet.type
+              ? {
+                  ...item,
+                  row: packet.data.positionRow ?? item.row,
+                  col: packet.data.positionCol ?? item.col,
+                }
+              : item
+          )
+        );
       }
 
       setMessages((prev) => [...prev, ...newMsg]);
@@ -116,10 +89,10 @@ function MainPage() {
 
     // CONTROL → 시작 신호 emit
     if (role === "CONTROL") {
-      socket.on("connect", () => {
+      mainSocket.on("connect", () => {
         console.log("[CONTROL SOCKET CONNECTED]");
 
-        socket.emit("control_start", {
+        mainSocket.emit("control_start", {
           role: "CONTROL",
           timestamp: Date.now(),
         });
@@ -129,7 +102,8 @@ function MainPage() {
     }
 
     return () => {
-      socket.disconnect();
+      mainSocket.disconnect();
+      controlSocket.disconnect();
     };
   }, [role]);
 
@@ -138,9 +112,6 @@ function MainPage() {
   //------------------------------------------------------
   return (
     <div className="main-page-root">
-      {/* 도로 상황 표시 */}
-      {/* <img src={mapImage} className="main-background-img" /> */}
-
       <div className="main-content">
         {/* HEADER */}
         <div className="main-header-section">
@@ -162,7 +133,8 @@ function MainPage() {
             <div className="role-tab-wrapper-m">
               <button
                 className={`role-tab-m ${popup ? "active-m" : ""}`}
-                onClick={() => setPopup(!popup)}>
+                onClick={() => setPopup(!popup)}
+              >
                 Chat
               </button>
               <button className="role-tab-m" onClick={goToHomePage}>
@@ -186,11 +158,13 @@ function MainPage() {
                       gridRowStart: item.row + 1,
                       backgroundColor: item.color,
                       borderColor: item.bordercolor,
-                    }}>
+                    }}
+                  >
                     {item.name}
                   </div>
                 ))}
-                {/* 원하는 column 사이 위치에 선 추가 */}
+
+                {/* 도로 중앙선 */}
                 <div className="col-border" style={{ gridColumn: "2 / 4" }} />
                 <div
                   className="col-border"
@@ -216,7 +190,7 @@ function MainPage() {
 
                 <div className="main-chat-popup-body">
                   {/* 실시간 동작 값 표시 */}
-                  {role != "CONTROL" && (
+                  {role !== "CONTROL" && (
                     <div className="main-chat-realtime-content">
                       <div className="realtime-title">실시간 동작 확인</div>
 
@@ -245,7 +219,8 @@ function MainPage() {
                   {messages.map((m, i) => (
                     <div
                       key={i}
-                      className={`main-chat-box ${m.isSinho ? "box-sinho" : "box-dongjak"}`}>
+                      className={`main-chat-box ${m.isSinho ? "box-sinho" : "box-dongjak"}`}
+                    >
                       {m.text}
                     </div>
                   ))}
