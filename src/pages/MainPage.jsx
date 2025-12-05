@@ -35,6 +35,7 @@ function MainPage() {
     position: [0, 0],
   });
 
+  const [stage5Logged, setStage5Logged] = useState(false);
   const [globalStage, setGlobalStage] = useState(null);
   const navigate = useNavigate();
   const goToHomePage = () => navigate("/");
@@ -148,7 +149,8 @@ function MainPage() {
         });
 
         // 🔥 SELF STATE에서도 stage 5 감지
-        if (packet.data.stage === 5) {
+        if (packet.data.stage === 5 && !stage5Logged) {
+          setStage5Logged(true);
           setLogQueue(prev => [
             ...prev,
             "EV가 반경 2km를 벗어났습니다."
