@@ -25,10 +25,42 @@ function MainPage() {
 
   // 차량 위치 UI
   const [items, setItems] = useState([
-    { id: 1, name: "CONTROL", row: 1, col: 0, color: "#6BA6A1", border: "0 3px solid #12543E" },
-    { id: 2, name: "AV1", row: 5, col: 3, color: "#9E94D1", border: "0 3px solid #3A2F71" },
-    { id: 3, name: "AV2", row: 5, col: 6, color: "#9E94D1", border: "0 3px solid #3A2F71" },
-    { id: 4, name: "EV", row: 6, col: 6, color: "#C18D94", border: "0 3px solid #751824" },
+    {
+      id: 1,
+      name: "CONTROL",
+      row: 1,
+      col: 0,
+      direction: "straight",
+      color: "#6BA6A1",
+      border: "0 3px solid #12543E",
+    },
+    {
+      id: 2,
+      name: "AV1",
+      row: 5,
+      col: 3,
+      direction: "straight",
+      color: "#9E94D1",
+      border: "0 3px solid #3A2F71",
+    },
+    {
+      id: 3,
+      name: "AV2",
+      row: 5,
+      col: 6,
+      direction: "straight",
+      color: "#9E94D1",
+      border: "0 3px solid #3A2F71",
+    },
+    {
+      id: 4,
+      name: "EV",
+      row: 6,
+      col: 6,
+      direction: "straight",
+      color: "#C18D94",
+      border: "0 3px solid #751824",
+    },
   ]);
 
   // 내 차량 상태
@@ -47,10 +79,14 @@ function MainPage() {
   const fmtPosition = (pos) => `(${pos?.[0]}, ${pos?.[1]})`;
 
   const logEVState = (state) =>
-    `EV가 현재 시속 ${state.speed}km/h로 이동 중입니다. 방향은 ${state.direction}, 위치는 ${fmtPosition(state.position)}입니다.`;
+    `EV가 현재 시속 ${state.speed}km/h로 이동 중입니다. 방향은 ${
+      state.direction
+    }, 위치는 ${fmtPosition(state.position)}입니다.`;
 
   const logAVState = (state) =>
-    `${state.id}가 시속 ${state.speed}km/h로 주행하고 있습니다. 방향은 ${state.direction}, 위치는 ${fmtPosition(state.position)}입니다.`;
+    `${state.id}가 시속 ${state.speed}km/h로 주행하고 있습니다. 방향은 ${
+      state.direction
+    }, 위치는 ${fmtPosition(state.position)}입니다.`;
 
   const logEmergency = (state) =>
     state.emergency ? `EV가 응급상황을 주변 차량에 전달했습니다.` : null;
@@ -96,9 +132,7 @@ function MainPage() {
     }
 
     // dynamic 추가
-    const dynamicMsgs = [logEmergency(EV), logLaneChange(AV1), logLaneChange(AV2)].filter(
-      Boolean
-    );
+    const dynamicMsgs = [logEmergency(EV), logLaneChange(AV1), logLaneChange(AV2)].filter(Boolean);
 
     logs = [...dynamicMsgs, ...logs];
 
@@ -109,7 +143,7 @@ function MainPage() {
   // 큐 → messages 1초씩 이동
   // ------------------------------
   useEffect(() => {
-    if (scenarioEnded) return; 
+    if (scenarioEnded) return;
     if (logQueue.length === 0) return;
 
     const timer = setInterval(() => {
@@ -148,6 +182,11 @@ function MainPage() {
 
       // 차량 위치 업데이트
       if (["EV", "AV1", "AV2"].includes(packet.type)) {
+        const pos = packet.data.position;
+
+        // ❗ 0,0 이거나 비정상 위치면 무시
+        if (!pos || (pos[0] === 0 && pos[1] === 0)) return;
+
         setItems((prevItems) =>
           prevItems.map((item) =>
             item.name === packet.type
@@ -170,6 +209,11 @@ function MainPage() {
       if (packet.type === "STATUS_ALL") {
         const allStates = packet.data;
         const currentStage = allStates["EV"]?.stage ?? null;
+
+        const pos = packet.data.position;
+
+        // ❗ 0,0 이거나 비정상 위치면 무시
+        if (!pos || (pos[0] === 0 && pos[1] === 0)) return;
 
         // 🔥 종료 조건: Stage 4 도달
         if (currentStage === 4 && !scenarioEnded) {
@@ -255,7 +299,6 @@ function MainPage() {
   return (
     <div className="main-page-root">
       <div className="main-content">
-
         {/* HEADER */}
         <div className="main-header-section">
           <header className="nav-bar-m">
@@ -276,8 +319,7 @@ function MainPage() {
             <div className="role-tab-wrapper-m">
               <button
                 className={`role-tab-m ${popup ? "active-m" : ""}`}
-                onClick={() => setPopup(!popup)}
-              >
+                onClick={() => setPopup(!popup)}>
                 Chat
               </button>
               <button className="role-tab-m" onClick={goToHomePage}>
@@ -300,8 +342,7 @@ function MainPage() {
                       gridColumnStart: item.col + 1,
                       gridRowStart: item.row + 1,
                       backgroundColor: item.color,
-                    }}
-                  >
+                    }}>
                     {item.name}
                   </div>
                 ))}
@@ -359,11 +400,9 @@ function MainPage() {
                     </div>
                   ))}
                 </div>
-
               </div>
             </div>
           )}
-
         </div>
       </div>
     </div>
