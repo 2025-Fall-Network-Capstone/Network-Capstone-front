@@ -71,19 +71,6 @@ function MainPage() {
 
       // 차량 위치 업데이트
       if (packet.type === "EV" || packet.type === "AV1" || packet.type === "AV2") {
-<<<<<<< Updated upstream
-        setItems((prevItems) =>
-          prevItems.map((item) =>
-            item.name === packet.type
-              ? {
-                  ...item,
-                  row: packet.data.positionRow ?? item.row,
-                  col: packet.data.positionCol ?? item.col,
-                }
-              : item
-          )
-        );
-=======
         if (packet.type === "EV") {
           setItems((prevItems) =>
             prevItems.map((item) =>
@@ -123,7 +110,6 @@ function MainPage() {
             )
           );
         }
->>>>>>> Stashed changes
       }
 
       setMessages((prev) => [...prev, ...newMsg]);
@@ -175,8 +161,7 @@ function MainPage() {
             <div className="role-tab-wrapper-m">
               <button
                 className={`role-tab-m ${popup ? "active-m" : ""}`}
-                onClick={() => setPopup(!popup)}
-              >
+                onClick={() => setPopup(!popup)}>
                 Chat
               </button>
               <button className="role-tab-m" onClick={goToHomePage}>
@@ -200,8 +185,7 @@ function MainPage() {
                       gridRowStart: item.row + 1,
                       backgroundColor: item.color,
                       borderColor: item.bordercolor,
-                    }}
-                  >
+                    }}>
                     {item.name}
                   </div>
                 ))}
@@ -261,8 +245,7 @@ function MainPage() {
                   {messages.map((m, i) => (
                     <div
                       key={i}
-                      className={`main-chat-box ${m.isSinho ? "box-sinho" : "box-dongjak"}`}
-                    >
+                      className={`main-chat-box ${m.isSinho ? "box-sinho" : "box-dongjak"}`}>
                       {m.text}
                     </div>
                   ))}

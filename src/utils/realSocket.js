@@ -2,13 +2,6 @@
 import { io } from "socket.io-client";
 
 export function createRealSocket(onMessage, role) {
-<<<<<<< Updated upstream
-
-  //------------------------------------------------------
-  // 1) 각 기기의 고유 서버 (자기 서버)
-  //------------------------------------------------------
-=======
->>>>>>> Stashed changes
   const SERVER_MAP = {
     EV: "http://192.168.0.34:5000",
     AV1: "http://192.168.0.118:5001",
