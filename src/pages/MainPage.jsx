@@ -207,7 +207,7 @@ function MainPage() {
               if (!stage3TimerRef.current) {
                 stage3TimerRef.current = setTimeout(() => {
                   setItems((prev) =>
-                    prev.map((v) => (v.name === item.name ? { ...v, row: 1, col: 6 } : v))
+                    prev.map((v) => (v.name === "EV" ? { ...v, row: 1, col: 6 } : v))
                   );
                 }, 5000);
               }
