@@ -35,6 +35,7 @@ function MainPage() {
     position: [0, 0],
   });
 
+  const [globalStage, setGlobalStage] = useState(null);
   const navigate = useNavigate();
   const goToHomePage = () => navigate("/");
 
@@ -145,7 +146,16 @@ function MainPage() {
           direction: packet.data.direction ?? "",
           position: packet.data.position ?? [0, 0],
         });
+
+        // 🔥 SELF STATE에서도 stage 5 감지
+        if (packet.data.stage === 5) {
+          setLogQueue(prev => [
+            ...prev,
+            "EV가 반경 2km를 벗어났습니다."
+          ]);
+        }
       }
+
 
       // 차량 위치 업데이트 (EV/AV 전용)
       if (["EV", "AV1", "AV2"].includes(packet.type)) {
@@ -163,15 +173,27 @@ function MainPage() {
       }
 
       if (packet.type === "STAGE") {
+        // 🔥 Stage 값 프론트에 저장 (CONTROL이 시나리오 기준이 됨)
+        setGlobalStage(packet.data.stage);
+
         if (role === "CONTROL") {
           setLogQueue((prev) => [...prev, logStageUpdate(packet.data.stage)]);
         }
       }
 
+
       // STATUS_ALL 처리
       if (packet.type === "STATUS_ALL") {
         const allStates = packet.data;
-        const currentStage = allStates["EV"]?.stage ?? null;
+        const currentStage = globalStage;
+
+
+        if (currentStage === 5) {
+            setLogQueue(prev => [
+                ...prev,
+                "EV가 반경 2km를 벗어났습니다."
+            ]);
+        }
 
         // 4-1) 자연어 로그 생성
         handleStatusAll(allStates);
