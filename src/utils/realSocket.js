@@ -21,7 +21,7 @@ export function createRealSocket(onMessage, role) {
     const pass = shouldDisplay(packetType);
 
     console.log(
-      `%c[RS-FILTER] role=${role} | packet=${packetType} | ${label} | 표시될까? → ${pass}`,
+      `%c[RS-FILTER] role=${role} | packet=${packetType} | ${label} | 표시 → ${pass}`,
       `color: ${pass ? "green" : "red"}; font-weight:bold;`
     );
   };
