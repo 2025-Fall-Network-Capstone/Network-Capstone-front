@@ -10,9 +10,14 @@ import { createRealSocket } from "../utils/realSocket";
 function MainPage() {
   const { role } = useContext(RoleContext);
   const [popup, setPopup] = useState(true);
+
+  // 실제 출력되는 메시지 리스트
   const [messages, setMessages] = useState([]);
 
-  // 차량들의 현재 위치 UI 표시용
+  // 1초마다 한 줄씩 내보내기 위한 메시지 큐
+  const [logQueue, setLogQueue] = useState([]);
+
+  // 차량 위치 UI용
   const [items, setItems] = useState([
     { id: 1, name: "CONTROL", row: 1, col: 0, color: "#6BA6A1", border: "0 3px solid #12543E" },
     { id: 2, name: "AV1", row: 5, col: 3, color: "#9E94D1", border: "0 3px solid #3A2F71" },
@@ -20,7 +25,7 @@ function MainPage() {
     { id: 4, name: "EV", row: 6, col: 6, color: "#C18D94", border: "0 3px solid #751824" },
   ]);
 
-  // 실시간 박스 (자기 자신의 상태만)
+  // Live State (자기 자신의 상태만)
   const [liveState, setLiveState] = useState({
     speed: 0,
     direction: "",
@@ -31,20 +36,16 @@ function MainPage() {
   const goToHomePage = () => navigate("/");
 
   // -----------------------------------------------------
-  // 자연어형 문장 생성 함수들(말투 수정됨)
+  // 자연어형 로그 생성 함수들
   // -----------------------------------------------------
 
   const fmtPosition = (pos) => `(${pos?.[0]}, ${pos?.[1]})`;
 
   const logEVState = (state) =>
-    `EV가 현재 시속 ${state.speed}km/h로 이동 중입니다. 방향은 ${
-      state.direction
-    }, 위치는 ${fmtPosition(state.position)}입니다.`;
+    `EV가 현재 시속 ${state.speed}km/h로 이동 중입니다. 방향은 ${state.direction}, 위치는 ${fmtPosition(state.position)}입니다.`;
 
   const logAVState = (state) =>
-    `${state.id}가 시속 ${state.speed}km/h로 주행하고 있습니다. 방향은 ${
-      state.direction
-    }, 위치는 ${fmtPosition(state.position)}입니다.`;
+    `${state.id}가 시속 ${state.speed}km/h로 주행하고 있습니다. 방향은 ${state.direction}, 위치는 ${fmtPosition(state.position)}입니다.`;
 
   const logEmergency = (state) =>
     state.emergency ? `EV가 응급상황을 주변 차량에 전달했습니다.` : null;
@@ -55,7 +56,7 @@ function MainPage() {
   const logStageUpdate = (stage) => `관제가 Stage ${stage}로 변경했습니다.`;
 
   // -----------------------------------------------------
-  // 역할별로 어떤 로그를 출력할지 결정하는 함수
+  // STATUS_ALL 로그 처리 → queue에 넣기
   // -----------------------------------------------------
 
   const handleStatusAll = (allStates) => {
@@ -65,26 +66,20 @@ function MainPage() {
     const AV1 = allStates.AV1;
     const AV2 = allStates.AV2;
 
-    // -----------------------------
     // CONTROL → 모든 차량 상태 출력
-    // -----------------------------
     if (role === "CONTROL") {
       logs.push(logEVState(EV));
       logs.push(logAVState(AV1));
       logs.push(logAVState(AV2));
     }
 
-    // -----------------------------
     // EV → 다른 차량 상태만 출력
-    // -----------------------------
     if (role === "EV") {
       logs.push(logAVState(AV1));
       logs.push(logAVState(AV2));
     }
 
-    // -----------------------------
-    // AV 차량 → 자기 제외 + EV 메시지 + 상대 AV 메시지
-    // -----------------------------
+    // AV → 자기 제외, EV + 상대 AV 출력
     if (role === "AV1") {
       logs.push(logEVState(EV));
       logs.push(logAVState(AV2));
@@ -94,14 +89,44 @@ function MainPage() {
       logs.push(logAVState(AV1));
     }
 
-    // emergency / lane_change 기반 메시지 추가
-    const dynamicMsgs = [logEmergency(EV), logLaneChange(AV1), logLaneChange(AV2)].filter(Boolean);
+    // emergency / lane_change 메시지 추가
+    const dynamicMsgs = [
+      logEmergency(EV),
+      logLaneChange(AV1),
+      logLaneChange(AV2)
+    ].filter(Boolean);
 
     logs = [...dynamicMsgs, ...logs];
 
-    // 메시지 저장
-    setMessages((prev) => [...prev, ...logs.map((t) => ({ text: t, isSinho: false }))]);
+    // ---- 기존: 즉시 출력하던 부분 수정 ----
+    // setMessages(...) 삭제하고 queue에 넣기
+    setLogQueue((prev) => [...prev, ...logs]);
   };
+
+  // -----------------------------------------------------
+  // 메시지 큐 관리: 1초마다 queue에서 하나씩 꺼내 messages로 이동
+  // -----------------------------------------------------
+
+  useEffect(() => {
+    if (logQueue.length === 0) return;
+
+    const timer = setInterval(() => {
+      setLogQueue((prevQueue) => {
+        if (prevQueue.length === 0) return [];
+
+        const [nextLog, ...rest] = prevQueue;
+
+        setMessages((prev) => [
+          ...prev,
+          { text: nextLog, isSinho: false },
+        ]);
+
+        return rest;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [logQueue]);
 
   // -----------------------------------------------------
   // WebSocket 연결
@@ -112,9 +137,7 @@ function MainPage() {
     const { mainSocket, controlSocket } = createRealSocket((packet) => {
       console.log("[MAINPAGE PACKET RECEIVED]", packet);
 
-      // -----------------------------------
-      // 실시간 자신의 상태 업데이트
-      // -----------------------------------
+      // LiveState 업데이트 (내 차량)
       if (packet.type === role && packet.data) {
         setLiveState({
           speed: packet.data.speed ?? 0,
@@ -123,9 +146,7 @@ function MainPage() {
         });
       }
 
-      // -----------------------------------
-      // 차량별 위치 표시 (UI)
-      // -----------------------------------
+      // 차량 위치 업데이트 (EV/AV 전용)
       if (["EV", "AV1", "AV2"].includes(packet.type)) {
         setItems((prevItems) =>
           prevItems.map((item) =>
@@ -140,24 +161,20 @@ function MainPage() {
         );
       }
 
-      // -----------------------------------
-      // stage 업데이트는 자연어 로그로 출력
-      // -----------------------------------
+      // STAGE 변경 로그
       if (packet.type === "STAGE") {
-        setMessages((prev) => [
+        setLogQueue((prev) => [
           ...prev,
-          { text: logStageUpdate(packet.data.stage), isSinho: false },
+          logStageUpdate(packet.data.stage)
         ]);
       }
 
-      // -----------------------------------
-      // status_all 처리 (핵심)
-      // -----------------------------------
+      // STATUS_ALL 처리
       if (packet.type === "STATUS_ALL") {
         handleStatusAll(packet.data);
 
-        // ⭐ status_all 기반으로 liveState 갱신
-        const myState = packet.data[role]; // 예: AV1이면 packet.data["AV1"]
+        // liveState 갱신(자기 차량만)
+        const myState = packet.data[role];
         if (myState) {
           setLiveState({
             speed: myState.speed ?? 0,
@@ -168,7 +185,6 @@ function MainPage() {
       }
     }, role);
 
-    // CONTROL 시작 신호
     if (role === "CONTROL") {
       mainSocket.on("connect", () => {
         mainSocket.emit("control_start", {
@@ -190,6 +206,7 @@ function MainPage() {
   return (
     <div className="main-page-root">
       <div className="main-content">
+
         {/* HEADER */}
         <div className="main-header-section">
           <header className="nav-bar-m">
@@ -210,7 +227,8 @@ function MainPage() {
             <div className="role-tab-wrapper-m">
               <button
                 className={`role-tab-m ${popup ? "active-m" : ""}`}
-                onClick={() => setPopup(!popup)}>
+                onClick={() => setPopup(!popup)}
+              >
                 Chat
               </button>
               <button className="role-tab-m" onClick={goToHomePage}>
@@ -233,7 +251,8 @@ function MainPage() {
                       gridColumnStart: item.col + 1,
                       gridRowStart: item.row + 1,
                       backgroundColor: item.color,
-                    }}>
+                    }}
+                  >
                     {item.name}
                   </div>
                 ))}
@@ -255,7 +274,8 @@ function MainPage() {
                 <div className="main-chat-popup-header">
                   <div className="main-chat-title">통신 로그</div>
                 </div>
-                {/* 실시간 박스 */}
+
+                {/* 실시간 박스 (CONTROL 제외) */}
                 {role !== "CONTROL" && (
                   <div className="main-chat-realtime-content">
                     <div className="realtime-title">실시간 동작 확인</div>
@@ -282,16 +302,17 @@ function MainPage() {
                 )}
 
                 <div className="main-chat-popup-body">
-                  {/* 로그 리스트 */}
                   {messages.map((m, i) => (
                     <div key={i} className={`main-chat-box box-dongjak`}>
                       {m.text}
                     </div>
                   ))}
                 </div>
+
               </div>
             </div>
           )}
+
         </div>
       </div>
     </div>
