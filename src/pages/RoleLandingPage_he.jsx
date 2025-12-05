@@ -34,9 +34,14 @@ function RoleLandingPage() {
                 Control Tower
               </button>
               <button
-                className={`role-tab-h ${role === "AV" ? "active-h" : ""}`}
-                onClick={() => setRole("AV")}>
-                Auto Vehicle
+                className={`role-tab-h ${role === "AV1" ? "active-h" : ""}`}
+                onClick={() => setRole("AV1")}>
+                Auto Vehicle 1
+              </button>
+              <button
+                className={`role-tab-h ${role === "AV2" ? "active-h" : ""}`}
+                onClick={() => setRole("AV2")}>
+                Auto Vehicle 2
               </button>
             </div>
           </header>

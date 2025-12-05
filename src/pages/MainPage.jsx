@@ -150,7 +150,11 @@ function MainPage() {
                 ? "Emergency Vehicle"
                 : role === "CONTROL"
                 ? "Control Tower"
-                : "Auto Vehicle"}
+                : role === "AV1"
+                ? "Auto Vehicle 1"
+                : role === "AV2"
+                ? "Auto Vehicle 2"
+                : "Unknown Role"}
             </span>
 
             <span className="nav-divider-m">+++</span>
