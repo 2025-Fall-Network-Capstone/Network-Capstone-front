@@ -3,7 +3,7 @@
 import "../styles/mainPage.css";
 import "../styles/gridCar.css";
 import { useNavigate } from "react-router-dom";
-import { useContext, useState, useEffect } from "react";
+import { useContext, useState, useEffect, useRef } from "react";
 import { RoleContext } from "../context/RoleContext.jsx";
 import { createRealSocket } from "../utils/realSocket";
 
@@ -16,6 +16,9 @@ function MainPage() {
 
   // 1초마다 한 줄씩 내보내기 위한 메시지 큐
   const [logQueue, setLogQueue] = useState([]);
+
+  // 3단계 5초 후 다른 메시지 출력용 타이머
+  const stage3TimerRef = useRef(null);
 
   // 차량 위치 UI용
   const [items, setItems] = useState([
@@ -167,6 +170,7 @@ function MainPage() {
       // STATUS_ALL 처리
       if (packet.type === "STATUS_ALL") {
         const allStates = packet.data;
+        const currentStage = allStates["EV"]?.stage ?? null;
 
         // 4-1) 자연어 로그 생성
         handleStatusAll(allStates);
@@ -187,10 +191,51 @@ function MainPage() {
             const state = allStates[item.name];
             if (!state) return item;
 
+            const originalRow = state.position?.[0] ?? item.row;
+            const originalCol = state.position?.[1] ?? item.col;
+
+            // ---------------------- 🔥 Stage 3 예외 처리 ----------------------
+            if (currentStage === 3) {
+              // 처음에는 서버 state 그대로 반영
+              const updatedItem = {
+                ...item,
+                row: originalRow,
+                col: originalCol,
+              };
+
+              // 5초 후 (1,6)으로 이동시키는 타이머 (중복 방지)
+              if (!stage3TimerRef.current) {
+                stage3TimerRef.current = setTimeout(() => {
+                  setItems((prev) =>
+                    prev.map((v) => (v.name === item.name ? { ...v, row: 1, col: 6 } : v))
+                  );
+                }, 5000);
+              }
+
+              return updatedItem;
+            }
+            // -----------------------------------------------------------------
+
+            // ---------------- 🔄 Stage 4 이상: 원래 위치 복구 ----------------
+            if (currentStage > 3) {
+              if (stage3TimerRef.current) {
+                clearTimeout(stage3TimerRef.current);
+                stage3TimerRef.current = null;
+              }
+
+              return {
+                ...item,
+                row: originalRow,
+                col: originalCol,
+              };
+            }
+            // -----------------------------------------------------------------
+
+            // 기본 상태 업데이트
             return {
               ...item,
-              row: state.position?.[0] ?? item.row,
-              col: state.position?.[1] ?? item.col,
+              row: originalRow,
+              col: originalCol,
             };
           })
         );
@@ -316,7 +361,6 @@ function MainPage() {
                       {m.text}
                     </div>
                   ))}
-
                 </div>
               </div>
             </div>
