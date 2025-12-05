@@ -58,9 +58,12 @@ function RoleLandingPage() {
 
               {/* DESCRIPTION */}
               <p className="landing-desc-h">
-                {role}인 경우 대시보드를 표시합니다. 무엇을 입력해야 할지는 잘 모르겠지만 대략 두 줄
-                정도면 충분할 것 같습니다. 그래서 내용을 채워넣는 부분입니다.
+                {role}의 주행 흐름을 가장 선명하게 보여주는 공간입니다.<br />
+                지금 이 순간 차량이 어떤 상태에 있는지, 대시보드를 통해 바로 확인해보세요.
               </p>
+
+
+
             </div>
 
             {/* BUTTON */}
