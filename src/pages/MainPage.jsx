@@ -162,13 +162,6 @@ function MainPage() {
         );
       }
 
-      // STAGE 변경 로그
-      if (packet.type === "STAGE") {
-        setLogQueue((prev) => [
-          ...prev,
-          logStageUpdate(packet.data.stage)
-        ]);
-      }
 
       // STATUS_ALL 처리
       if (packet.type === "STATUS_ALL") {
