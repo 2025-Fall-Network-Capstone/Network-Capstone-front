@@ -37,10 +37,14 @@ function MainPage() {
   const fmtPosition = (pos) => `(${pos?.[0]}, ${pos?.[1]})`;
 
   const logEVState = (state) =>
-    `EV가 현재 시속 ${state.speed}km/h로 이동 중입니다. 방향은 ${state.direction}, 위치는 ${fmtPosition(state.position)}입니다.`;
+    `EV가 현재 시속 ${state.speed}km/h로 이동 중입니다. 방향은 ${
+      state.direction
+    }, 위치는 ${fmtPosition(state.position)}입니다.`;
 
   const logAVState = (state) =>
-    `${state.id}가 시속 ${state.speed}km/h로 주행하고 있습니다. 방향은 ${state.direction}, 위치는 ${fmtPosition(state.position)}입니다.`;
+    `${state.id}가 시속 ${state.speed}km/h로 주행하고 있습니다. 방향은 ${
+      state.direction
+    }, 위치는 ${fmtPosition(state.position)}입니다.`;
 
   const logEmergency = (state) =>
     state.emergency ? `EV가 응급상황을 주변 차량에 전달했습니다.` : null;
@@ -48,9 +52,7 @@ function MainPage() {
   const logLaneChange = (state) =>
     state.lane_change ? `${state.id}가 차선 변경을 수행 중입니다.` : null;
 
-  const logStageUpdate = (stage) =>
-    `관제가 Stage ${stage}로 변경했습니다.`;
-
+  const logStageUpdate = (stage) => `관제가 Stage ${stage}로 변경했습니다.`;
 
   // -----------------------------------------------------
   // 역할별로 어떤 로그를 출력할지 결정하는 함수
@@ -153,6 +155,16 @@ function MainPage() {
       // -----------------------------------
       if (packet.type === "STATUS_ALL") {
         handleStatusAll(packet.data);
+
+        // ⭐ status_all 기반으로 liveState 갱신
+        const myState = packet.data[role]; // 예: AV1이면 packet.data["AV1"]
+        if (myState) {
+          setLiveState({
+            speed: myState.speed ?? 0,
+            direction: myState.direction ?? "__",
+            position: myState.position ?? [0, 0],
+          });
+        }
       }
     }, role);
 
