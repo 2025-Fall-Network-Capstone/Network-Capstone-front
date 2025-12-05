@@ -2,6 +2,9 @@
 import { io } from "socket.io-client";
 
 export function createRealSocket(onMessage, role) {
+  //------------------------------------------------------
+  // 역할별 서버 매핑
+  //------------------------------------------------------
   const SERVER_MAP = {
     EV: "http://172.20.62.16:5000",
     AV1: "http://172.20.57.184:5001",
@@ -12,84 +15,91 @@ export function createRealSocket(onMessage, role) {
   const myServer = SERVER_MAP[role];
 
   //------------------------------------------------------
-  // ⭐ mainSocket: 자기 서버와 연결 (자기 state 받기)
+  // ⭐ mainSocket: 자기 서버와 연결 (각 차량의 고유 서버)
   //------------------------------------------------------
-  const mainSocket = io(myServer, {
-    transports: ["websocket"],
-  });
+  const mainSocket = io(myServer, { transports: ["websocket"] });
 
   mainSocket.on("connect", () => {
-    console.log(`[REAL SOCKET] Connected to main server ${myServer} (role=${role})`);
+    console.log(`[REAL SOCKET] Connected to MY-SERVER ${myServer} (role=${role})`);
   });
 
   mainSocket.on("disconnect", () => {
-    console.log("[REAL SOCKET] Main server disconnected");
+    console.log("[REAL SOCKET] Disconnected from MY-SERVER");
   });
 
   //------------------------------------------------------
-  // ⭐ controlSocket: Control Tower(5003)와 연결
+  // ⭐ controlSocket: Control Tower 서버와 연결
   //------------------------------------------------------
-  const controlSocket = io("http://172.20.96.208:5003", {
+  const controlSocket = io(SERVER_MAP["CONTROL"], {
     transports: ["websocket"],
   });
 
   controlSocket.on("connect", () => {
-    console.log("[REAL SOCKET] Connected to Control Tower (5003)");
+    console.log(`[REAL SOCKET] Connected to CONTROL Tower (5003)`);
   });
 
   controlSocket.on("disconnect", () => {
-    console.log("[REAL SOCKET] Control Tower disconnected");
+    console.log("[REAL SOCKET] Disconnected from CONTROL Tower");
   });
 
   //------------------------------------------------------
-  // ⭐ CT → 모든 차량에게 stage_update 브로드캐스트
+  // ⭐ stage_update: CT → 모든 차량 전달
   //------------------------------------------------------
   controlSocket.on("stage_update", (packet) => {
-    console.log("[REAL SOCKET] Received stage_update:", packet);
+    console.log("[REAL SOCKET] stage_update:", packet);
+    onMessage({ type: "STAGE", data: packet });
+  });
+
+  //------------------------------------------------------
+  // ⭐ 자기 상태(ev_state, av1_state, av2_state)
+  //------------------------------------------------------
+  const SELF_EVENT = {
+    EV: "ev_state",
+    AV1: "av1_state",
+    AV2: "av2_state",
+  }[role];
+
+  if (SELF_EVENT) {
+    mainSocket.on(SELF_EVENT, (state) => {
+      console.log(`[REAL SOCKET] SELF STATE (${role}):`, state);
+      onMessage({ type: role, data: state });
+    });
+  }
+
+  //------------------------------------------------------
+  // ⭐ vehicle_state (단일 차량 상태 업데이트)
+  //------------------------------------------------------
+  const handleVehicleState = (packet) => {
+    // packet = { id: "EV"/"AV1"/"AV2", state: {...} }
+    console.log("[REAL SOCKET] vehicle_state →", packet);
+    onMessage({ type: packet.id, data: packet.state });
+  };
+
+  mainSocket.on("vehicle_state", handleVehicleState);
+  controlSocket.on("vehicle_state", handleVehicleState);
+
+  //------------------------------------------------------
+  // ⭐ status_all (핵심!) — CT → 모든 차량 전체 상태 전송
+  //------------------------------------------------------
+  controlSocket.on("status_all", (packet) => {
+    /*
+      packet 구조 예시:
+      {
+        EV: { speed: 10, lane_change: false, ... },
+        AV1: { ... },
+        AV2: { ... }
+      }
+    */
+    console.log("[REAL SOCKET] status_all received:", packet);
 
     onMessage({
-      type: "STAGE",
-      data: packet,
+      type: "STATUS_ALL",  // 프론트 내부 판별용
+      data: packet,         // EV/AV1/AV2 전체 상태
     });
   });
 
   //------------------------------------------------------
-  // ⭐ 차량별 자기 서버에서 보내는 상태 수신 (중요)
-  //------------------------------------------------------
-  if (role === "EV") {
-    mainSocket.on("ev_state", (state) => {
-      console.log("[REAL SOCKET] EV SELF STATE:", state);
-      onMessage({ type: "EV", data: state });
-    });
-  }
-
-  if (role === "AV1") {
-    mainSocket.on("av1_state", (state) => {
-      console.log("[REAL SOCKET] AV1 SELF STATE:", state);
-      onMessage({ type: "AV1", data: state });
-    });
-  }
-
-  if (role === "AV2") {
-    mainSocket.on("av2_state", (state) => {
-      console.log("[REAL SOCKET] AV2 SELF STATE:", state);
-      onMessage({ type: "AV2", data: state });
-    });
-  }
-
-  //------------------------------------------------------
-  // ⭐ vehicle_state (CT or 각 차량 서버에서 올 수 있음)
-  //------------------------------------------------------
-  mainSocket.on("vehicle_state", (packet) => {
-    onMessage({ type: packet.id, data: packet.state });
-  });
-
-  controlSocket.on("vehicle_state", (packet) => {
-    onMessage({ type: packet.id, data: packet.state });
-  });
-
-  //------------------------------------------------------
-  // ⭐ 두 소켓 모두 반환해서 MainPage에서 제어 가능하게
+  // ⭐ 소켓 객체 반환 (disconnect 등 사용 가능)
   //------------------------------------------------------
   return { mainSocket, controlSocket };
 }
