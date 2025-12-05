@@ -186,12 +186,18 @@ function MainPage() {
 
     if (role === "CONTROL") {
       mainSocket.on("connect", () => {
-        mainSocket.emit("control_start", {
-          role: "CONTROL",
-          timestamp: Date.now(),
-        });
+        console.log("[CONTROL] 연결됨, 10초 뒤 control_start 전송 예정...");
+
+        setTimeout(() => {
+          mainSocket.emit("control_start", {
+            role: "CONTROL",
+            timestamp: Date.now(),
+          });
+          console.log("[CONTROL] control_start 신호 전송됨");
+        }, 10000); // 10초(10000ms)
       });
     }
+
 
     return () => {
       mainSocket.disconnect();
