@@ -174,18 +174,21 @@ function MainPage() {
       }
     }, role);
 
-    // CONTROL 시작 신호
-    const sendControlStart = () => {
-      if (role !== "CONTROL") return;
+    // CONTROL 시작 신호 (RoleLandingPage → Show My Dashboard 버튼 트리거)
+    useEffect(() => {
+      if (role === "CONTROL" && startSignal) {
+        setTimeout(() => {
+          mainSocketRef.current.emit("control_start", {
+            role: "CONTROL",
+            timestamp: Date.now(),
+          });
+          console.log("[CONTROL] control_start signal sent after dashboard open");
+        }, 2000);
 
-      setTimeout(() => {
-        mainSocket.emit("control_start", {
-          role: "CONTROL",
-          timestamp: Date.now(),
-        });
-        console.log("[CONTROL] control_start signal sent");
-      }, 2000);
-    };
+        setStartSignal(false); // 한 번만 실행되도록
+      }
+    }, [startSignal, role]);
+
 
 
     return () => {

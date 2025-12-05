@@ -6,10 +6,15 @@ import { useContext } from "react";
 import { RoleContext } from "../context/RoleContext.jsx";
 
 function RoleLandingPage() {
-  const { role, setRole } = useContext(RoleContext);
+  const { role, setRole, setStartSignal } = useContext(RoleContext);
   const navigate = useNavigate();
 
   const goToMainPage = () => {
+    // CONTROL일 때만 시작 신호 플래그 설정
+    if (role === "CONTROL") {
+      setStartSignal(true);
+    }
+
     navigate("/main");
   };
 
@@ -17,7 +22,7 @@ function RoleLandingPage() {
     <div className="landing-root-h">
       <div className="landing-all-h">
         <div className="landing-container-h">
-          {/* NAVIGATION BAR */}
+
           <header className="nav-bar-h">
             <span className="nav-label-h">Role Setting</span>
             <span className="nav-divider-h">+++</span>
@@ -25,45 +30,48 @@ function RoleLandingPage() {
             <div className="role-tab-wrapper-h">
               <button
                 className={`role-tab-h ${role === "EV" ? "active-h" : ""}`}
-                onClick={() => setRole("EV")}>
+                onClick={() => setRole("EV")}
+              >
                 Emergency Vehicle
               </button>
+
               <button
                 className={`role-tab-h ${role === "CONTROL" ? "active-h" : ""}`}
-                onClick={() => setRole("CONTROL")}>
+                onClick={() => setRole("CONTROL")}
+              >
                 Control Tower
               </button>
+
               <button
                 className={`role-tab-h ${role === "AV1" ? "active-h" : ""}`}
-                onClick={() => setRole("AV1")}>
+                onClick={() => setRole("AV1")}
+              >
                 Auto Vehicle 1
               </button>
+
               <button
                 className={`role-tab-h ${role === "AV2" ? "active-h" : ""}`}
-                onClick={() => setRole("AV2")}>
+                onClick={() => setRole("AV2")}
+              >
                 Auto Vehicle 2
               </button>
             </div>
           </header>
 
-          {/* CONTENT AREA */}
           <section className="content-h">
             <div className="title-des-content-h">
-              {/* TITLE */}
               <h1 className="landing-title-h">
                 Emergency-Situation
                 <br />
                 Dashboard
               </h1>
 
-              {/* DESCRIPTION */}
               <p className="landing-desc-h">
-                {role}인 경우 대시보드를 표시합니다. 무엇을 입력해야 할지는 잘 모르겠지만 대략 두 줄
-                정도면 충분할 것 같습니다. 그래서 내용을 채워넣는 부분입니다.
+                선택한 역할( {role} )로 대시보드를 표시합니다.
               </p>
             </div>
 
-            {/* BUTTON */}
+            {/* ★ 이 버튼을 눌러야 시작 신호가 전송됨 */}
             <button onClick={goToMainPage} className="landing-btn-h">
               Show My Dashboard →
             </button>
