@@ -20,20 +20,80 @@ function MainPage() {
   // 3단계 5초 후 다른 메시지 출력용 타이머
   const stage3TimerRef = useRef(null);
 
+  // 방향 맵
+  const dirMap = {
+    straight: "직진",
+    left_turn: "좌회전",
+    right_turn: "우회전",
+  };
+
   // 차량 위치 UI용
-  const [items, setItems] = useState([
-    { id: 1, name: "CONTROL", row: 1, col: 0, color: "#6BA6A1", border: "0 3px solid #12543E" },
-    { id: 2, name: "AV1", row: 5, col: 3, color: "#9E94D1", border: "0 3px solid #3A2F71" },
-    { id: 3, name: "AV2", row: 5, col: 6, color: "#9E94D1", border: "0 3px solid #3A2F71" },
-    { id: 4, name: "EV", row: 6, col: 6, color: "#C18D94", border: "0 3px solid #751824" },
-  ]);
+  const initialItems = [
+    {
+      id: 1,
+      name: "CONTROL",
+      speed: 0,
+      row: 1,
+      col: 0,
+      direction: "straight",
+      color: "#6BA6A1",
+      border: "0 3px solid #12543E",
+    },
+    {
+      id: 2,
+      name: "AV1",
+      speed: 40,
+      row: 5,
+      col: 3,
+      direction: "straight",
+      color: "#9E94D1",
+      border: "0 3px solid #3A2F71",
+    },
+    {
+      id: 3,
+      name: "AV2",
+      speed: 40,
+      row: 5,
+      col: 6,
+      direction: "straight",
+      color: "#9E94D1",
+      border: "0 3px solid #3A2F71",
+    },
+    {
+      id: 4,
+      name: "EV",
+      speed: 70,
+      row: 6,
+      col: 6,
+      direction: "straight",
+      color: "#C18D94",
+      border: "0 3px solid #751824",
+    },
+  ];
+
+  const [items, setItems] = useState(initialItems);
+
+  // 🔥 role에 해당하는 초기 상태 반환 함수
+  function getInitialLiveState(role) {
+    const item = initialItems.find((v) => v.name === role);
+
+    if (!item) {
+      return {
+        speed: 0,
+        direction: "",
+        position: [0, 0],
+      };
+    }
+
+    return {
+      speed: item.speed,
+      direction: item.direction,
+      position: [item.row, item.col], // 초기 row/col 기반
+    };
+  }
 
   // Live State (자기 자신의 상태만)
-  const [liveState, setLiveState] = useState({
-    speed: 0,
-    direction: "",
-    position: [0, 0],
-  });
+  const [liveState, setLiveState] = useState(() => getInitialLiveState(role));
 
   const [stage5Logged, setStage5Logged] = useState(false);
   const [globalStage, setGlobalStage] = useState(null);
@@ -150,10 +210,7 @@ function MainPage() {
         // 🔥 SELF STATE에서도 stage 5 감지
         if (packet.data.stage === 5 && !stage5Logged) {
           setStage5Logged(true);
-          setLogQueue(prev => [
-            ...prev,
-            "EV가 반경 2km를 벗어났습니다."
-          ]);
+          setLogQueue((prev) => [...prev, "EV가 반경 2km를 벗어났습니다."]);
         }
       }
 
@@ -195,11 +252,16 @@ function MainPage() {
 
         // 4-2) 자신의 실시간 박스 업데이트
         const myState = allStates[role];
+        // const init = initialItems.find((item) => item.name === role);
+
         if (myState) {
+          // 🔥 role에 맞는 초기값 찾기
+          const init = initialItems.find((item) => item.name === role);
+
           setLiveState({
-            speed: myState.speed ?? 0,
-            direction: myState.direction ?? "__",
-            position: myState.position ?? [0, 0],
+            speed: myState.speed ?? init?.speed ?? 0,
+            direction: myState.direction ?? init?.direction ?? "__",
+            position: myState.position ?? [init?.row ?? 0, init?.col ?? 0],
           });
         }
 
@@ -360,7 +422,7 @@ function MainPage() {
 
                       <div className="realtime-box">
                         <div className="realtime-box-sub-tittle">주행 방향</div>
-                        <div className="realtime-box-text">{liveState.direction}</div>
+                        <div className="realtime-box-text">{dirMap[liveState.direction]}</div>
                       </div>
 
                       <div className="realtime-box">
