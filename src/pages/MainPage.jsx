@@ -53,7 +53,6 @@ function MainPage() {
   const logLaneChange = (state) =>
     state.lane_change ? `${state.id}가 차선 변경을 수행 중입니다.` : null;
 
-  const logStageUpdate = (stage) => `관제가 Stage ${stage}로 변경했습니다.`;
 
   // -----------------------------------------------------
   // STATUS_ALL 로그 처리 → queue에 넣기
